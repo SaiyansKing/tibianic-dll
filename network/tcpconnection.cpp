@@ -236,6 +236,7 @@ DWORD WINAPI TcpConnection::worker(LPVOID lpParam){
 	if(connectionSocket != INVALID_SOCKET){
 		closesocket(connectionSocket);
 	}
+	return 0;
 }
 
 void TcpConnection::tryconnect(std::string host, uint16_t port){

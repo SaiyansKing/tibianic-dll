@@ -7,7 +7,7 @@
 #define MESSAGE_TITLE "Tibia"
 #define WINDOW_TITLE "Tibia Client"
 
-#define UPDATER_URL "http:/\/127.0.0.1/update/"
+#define UPDATER_URL "http://127.0.0.1/update/"
 #define MAIN_LIBRARY "Tibia.dll"
 #define MAIN_EXECUTABLE "Tibia.exe"
 #define MAIN_ADVANCED_CONFIG "Tibia.ini"

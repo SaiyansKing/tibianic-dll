@@ -14,45 +14,45 @@ Color Painter::getOutfitColor(int color){
 
     float loc1 = 0, loc2 = 0, loc3 = 0;
 	if(color % HSI_H_STEPS != 0) {
-        loc1 = color % HSI_H_STEPS * 1.0/18.0;
-        loc2 = 1;
-        loc3 = 1;
+        loc1 = color % HSI_H_STEPS * 1.0f/18.0f;
+        loc2 = 1.f;
+        loc3 = 1.f;
 
         switch(int(color / HSI_H_STEPS)) {
         case 0:
-            loc2 = 0.25;
-            loc3 = 1.00;
+            loc2 = 0.25f;
+            loc3 = 1.00f;
             break;
         case 1:
-            loc2 = 0.25;
-            loc3 = 0.75;
+            loc2 = 0.25f;
+            loc3 = 0.75f;
             break;
         case 2:
-            loc2 = 0.50;
-            loc3 = 0.75;
+            loc2 = 0.50f;
+            loc3 = 0.75f;
             break;
         case 3:
-            loc2 = 0.667;
-            loc3 = 0.75;
+            loc2 = 0.667f;
+            loc3 = 0.75f;
             break;
         case 4:
-            loc2 = 1.00;
-            loc3 = 1.00;
+            loc2 = 1.00f;
+            loc3 = 1.00f;
             break;
         case 5:
-            loc2 = 1.00;
-            loc3 = 0.75;
+            loc2 = 1.00f;
+            loc3 = 0.75f;
             break;
         case 6:
-            loc2 = 1.00;
-            loc3 = 0.50;
+            loc2 = 1.00f;
+            loc3 = 0.50f;
             break;
         }
     }
     else {
-        loc1 = 0;
-        loc2 = 0;
-        loc3 =  1 - (float)color / HSI_H_STEPS / (float)HSI_SI_VALUES;
+        loc1 = 0.f;
+        loc2 = 0.f;
+        loc3 = 1 - (float)color / HSI_H_STEPS / (float)HSI_SI_VALUES;
     }
 
 	if(loc3 == 0){
@@ -117,19 +117,8 @@ void Painter::drawText(int surface, int x, int y, int font, int red, int green, 
 }
 
 void Painter::drawRectangle(int surface, int x, int y, int width, int height, int red, int green, int blue){
-	asm("mov %0, %%eax":: "r" (GET_PAINTER_FUNCTION_ADDRESS));
-	asm("call *%eax");
-	asm("mov %eax, %ecx");
-	asm("mov (%ecx), %eax");
-	asm("push %0":: "m" (blue));
-	asm("push %0":: "m" (green));
-	asm("push %0":: "m" (red));
-	asm("push %0":: "m" (height));
-	asm("push %0":: "m" (width));
-	asm("push %0":: "m" (y));
-	asm("push %0":: "m" (x));
-	asm("push %0":: "m" (surface));
-	asm("call *0x14(%eax)");
+	uint32_t engineAddr = reinterpret_cast<uint32_t(__cdecl *)(void)>(GET_PAINTER_FUNCTION_ADDRESS)();
+	reinterpret_cast<void(__fastcall *)(uint32_t, int, int, int, int, int, int, int, int, int)>(*reinterpret_cast<uint32_t*>(*reinterpret_cast<uint32_t*>(engineAddr) + 0x14))(engineAddr, 0, surface, x, y, width, height, red, green, blue);
 }
 
 void Painter::drawHollowRectangle(int surface, int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t thickness, int red, int green, int blue){

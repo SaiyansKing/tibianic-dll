@@ -14,7 +14,8 @@ void readNews(Button* button, void* param){
 	
 	/* Create link */
 	char buffer[1024];
-	sprintf(buffer, "http://tibia.com/news.php", topic->c_str());
+	//sprintf(buffer, "http://tibia.com/news.php", topic->c_str());
+	sprintf(buffer, "http://tibia.com/news.php");
 	
 	/* Open website */
 	ShellExecute(NULL, "open", buffer, NULL, NULL, SW_SHOWDEFAULT);

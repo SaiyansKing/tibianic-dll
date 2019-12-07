@@ -91,7 +91,7 @@ unsigned long httpGet::openfile(char *fname, bool reload, std::ofstream &fout){
 		throw DLExc("unable to open output file.");
 	}
 
-	return fout.tellp();
+	return static_cast<unsigned long>(fout.tellp());
 }
 
 bool httpGet::ishttp(char *url){

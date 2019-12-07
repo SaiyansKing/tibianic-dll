@@ -186,7 +186,7 @@ std::vector<std::string> wrapTextLines(int m_font, std::string message, int bloc
 			bool m_lineFinish = false;
 
 			if(m_lastword.empty()){
-				for(int i = 0; i < message.length(); i++){
+				for(size_t i = 0; i < message.length(); i++){
 					char c = message[i];
 					if(c == ' '){
 						message = message.substr(i + 1);
@@ -465,7 +465,7 @@ bool isHttpResponseCompleted(std::string response){
 		
 		std::string content = response.substr(response.find("\r\n\r\n") + 4);
 		
-		if(content.length() < value){
+		if(content.length() < static_cast<size_t>(value)){
 			return false;
 		}
 	}
@@ -550,7 +550,7 @@ std::string decodeHttpChunkedContent(std::string response){
 			std::string text = *lines.begin();
 			lines.erase(lines.begin());
 			
-			chunkLength = chunkLength - std::min(chunkLength, text.length());		
+			chunkLength = chunkLength - std::min<size_t>(chunkLength, text.length());		
 			ret.append(text);
 		}
 	}
@@ -566,7 +566,6 @@ std::string getHttpContentText(std::string response){
 	
 	return content;
 }
-
 
 bool isFile(std::string p){
 	FILE *f = fopen(p.c_str(), "rb");

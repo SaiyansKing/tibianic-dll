@@ -1,5 +1,7 @@
 #include "listbox.h"
 
+#define strncasecmp _strnicmp
+
 ListBox::ListBox(int x, int y, int width, int visibleItems) : GUIParent(x, y, width, visibleItems * 12) {
   m_selectedItem = 0;
 	m_visibleItems = visibleItems;
@@ -30,7 +32,7 @@ bool ListBox::onMouseEvent(MouseEvent_t event, int x, int y, bool leftButtonDown
 	Scroll* scroll = getControl<Scroll>(GUIParent::CONTROL_1_LOCATION);
 	if(isButtonClickEvent(event, leftButtonDown)){
 		for(int i = scroll->getPosition(), j = 0; i != scroll->getPosition() + m_visibleItems; ++i, ++j){
-			if(i >= m_items.size()){
+			if(i >= static_cast<int>(m_items.size())){
 				break;
 			}
 			
@@ -47,19 +49,19 @@ bool ListBox::onKeyboardEvent(KeyboardEvent_t event, keyboardstate_t state, int 
 	if(event == EVENT_KEY_DOWN){
 		switch(state){
 			case KEYBOARD_STATE_UP: {
-				return select(std::max(0, m_selectedItem - 1));
+				return select(std::max<int>(0, m_selectedItem - 1));
 			}
 			
 			case KEYBOARD_STATE_DOWN: {
-				return select(std::min((int)m_items.size() - 1, m_selectedItem + 1));
+				return select(std::min<int>((int)m_items.size() - 1, m_selectedItem + 1));
 			}
 			
 			case KEYBOARD_STATE_ASCII: {
-				for(int i = 0; i < m_items.size(); i++){
+				for(size_t i = 0; i < m_items.size(); i++){
 					std::string* it = &m_items[i];
 					
 					if(strncasecmp(it->c_str(), (char*)&input, 1) == 0){
-						return select(i);
+						return select(static_cast<int>(i));
 					}
 				}
 				
@@ -79,7 +81,7 @@ int ListBox::selection(){
 }
 
 std::string ListBox::selectionstr(){
-	if(m_selectedItem < m_items.size()){
+	if(m_selectedItem < static_cast<int>(m_items.size())){
 		return m_items[m_selectedItem];
 	}
 	
@@ -113,10 +115,10 @@ void ListBox::removeItems(){
 
 void ListBox::removeItem(int position){
 	if(m_selectedItem == position){
-		m_selectedItem = std::max(0, m_selectedItem - 1);
+		m_selectedItem = std::max<int>(0, m_selectedItem - 1);
 	}
 	
-	if(position < m_items.size()){
+	if(position < static_cast<int>(m_items.size())){
 		m_items.erase(m_items.begin() + position);
 	}
 	
@@ -146,13 +148,13 @@ void ListBox::insertItem(int position, std::string item){
 }
 
 void ListBox::update(){
-	int hiddenItems = std::max(0, (int)m_items.size() - m_visibleItems);
+	int hiddenItems = std::max<int>(0, (int)m_items.size() - m_visibleItems);
 	
 	Scroll* scroll = getControl<Scroll>(GUIParent::CONTROL_1_LOCATION);
 	scroll->setMax(hiddenItems);
 	
 	if(hiddenItems){
-		scroll->setSize(std::max(0.2, (double)m_visibleItems / (double)(hiddenItems + m_visibleItems)));
+		scroll->setSize(std::max<double>(0.2, (double)m_visibleItems / (double)(hiddenItems + m_visibleItems)));
 	} else {
 		scroll->setSize(1.0);
 	}
@@ -166,7 +168,7 @@ void ListBox::draw(int surface){
 	
 	Scroll* scroll = getControl<Scroll>(GUIParent::CONTROL_1_LOCATION);
 	for(int i = scroll->getPosition(), j = 0; i != scroll->getPosition() + m_visibleItems; ++i, ++j){
-		if(i >= m_items.size()){
+		if(i >= static_cast<int>(m_items.size())){
 			break;
 		}
 		

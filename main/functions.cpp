@@ -9,12 +9,9 @@ namespace Tibia {
 	/* Tibia functions */
 	_Error *Error = (_Error*)ERROR_FUNCTION_ADDRESS;
 	_TextMetric *TextMetric = (_TextMetric*)GET_METRIC_FUNCTION_ADDRESS;
-	_MinimizeInventory *MinimizeInventory = (_MinimizeInventory*)MINIMISE_INVENTORY_FUNCTION_ADDRESS;
-	_MaximizeInventory *MaximizeInventory = (_MaximizeInventory*)MAXIMIZE_INVENTORY_FUNCTION_ADDRESS;
 	_GetItemProperty *GetItemProperty = (_GetItemProperty*)GET_ITEM_PROPERTY_FUNCTION_ADDRESS;
 	_SetExperience *SetExperience = (_SetExperience*)SET_EXPERIENCE_FUNCTION_ADDRESS;
 	_PushLetter *PushLetter = (_PushLetter*)PUSH_LETTER_FUNCTION_ADDRESS;
-	_AddContextMenu *AddContextMenu = (_AddContextMenu*)ADD_CONTEXT_MENU_EX_FUNCTION_ADDRESS;
 	_GetCreatureEntry *GetCreatureEntry = (_GetCreatureEntry*)GET_CREATURE_ENTRY_FUNCTION_ADDRESS;
 	_CreateTextDialog *CreateTextDialog = (_CreateTextDialog*)WARNING_DIALOG_FUNCTION_ADDRESS;
 	_CreateAcceptDialog *CreateAcceptDialog = (_CreateAcceptDialog*)0x004803F0;
@@ -105,23 +102,10 @@ namespace Tibia {
 		ExitProcess(0);
 	}
 
-	inline uint32_t getEip(){
-		uint32_t eip;
-		
-		asm(".intel_syntax noprefix");
-		asm("mov eax, [ebp+4]");
-		asm("mov %0, eax;"
-			".att_syntax;"
-			: "=r"(eip)
-			:);
-		
-		return eip;
-	}
-
 	bool CanLogout(){
 		uint8_t flags = *(uint8_t*)ICONS_ADDRESS;
 		
-		if(flags & FLAG_SWORDS == FLAG_SWORDS){
+		if((flags & FLAG_SWORDS) == FLAG_SWORDS){
 			return false;
 		}
 		
@@ -135,5 +119,14 @@ namespace Tibia {
 		}
 		
 		return false;
+	}
+
+	void AddContextMenu(uint32_t _THIS, uint32_t eventId, const char* text, const char* shortcut){
+		reinterpret_cast<void(__fastcall *)(uint32_t, int, uint32_t, const char*, const char*)>(ADD_CONTEXT_MENU_EX_FUNCTION_ADDRESS)(_THIS, 0, eventId, text, shortcut);
+	}
+
+	void AddContextMenuEx(uint32_t _THIS, uint32_t eventId, const char* text, const char* shortcut){
+		*reinterpret_cast<BYTE*>(_THIS + 0x30) = 1;
+		reinterpret_cast<void(__fastcall *)(uint32_t, int, uint32_t, const char*, const char*)>(ADD_CONTEXT_MENU_EX_FUNCTION_ADDRESS)(_THIS, 0, eventId, text, shortcut);
 	}
 }

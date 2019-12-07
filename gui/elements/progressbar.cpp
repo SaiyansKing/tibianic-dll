@@ -1,5 +1,7 @@
 #include "progressbar.h"
 
+#include <algorithm>
+
 ProgressBar::ProgressBar(int x, int y, int width, int height, int min, int max, int red, int green, int blue) : GUIElement(x, y, width, height) {
 	m_color = Color_t(red, green, blue);
 	
@@ -12,23 +14,23 @@ ProgressBar::ProgressBar(int x, int y, int width, int height, int min, int max, 
 }
 
 void ProgressBar::step(){
-	m_pos = std::max(m_min, std::min(m_pos + 1, m_max));
+	m_pos = std::max<int>(m_min, std::min<int>(m_pos + 1, m_max));
 }
 
 void ProgressBar::back(){
-	m_pos = std::max(m_min, std::min(m_pos - 1, m_max));
+	m_pos = std::max<int>(m_min, std::min<int>(m_pos - 1, m_max));
 }
 
 void ProgressBar::step(int steps){
-	m_pos = std::max(m_min, std::min(m_pos + steps, m_max));
+	m_pos = std::max<int>(m_min, std::min<int>(m_pos + steps, m_max));
 }
 
 void ProgressBar::back(int steps){
-	m_pos = std::max(m_min, std::min(m_pos - steps, m_max));
+	m_pos = std::max<int>(m_min, std::min<int>(m_pos - steps, m_max));
 }
 
 void ProgressBar::pos(int position){
-	m_pos = std::max(m_min, std::min(position, m_max));
+	m_pos = std::max<int>(m_min, std::min<int>(position, m_max));
 }
 
 void ProgressBar::draw(int surface){

@@ -242,8 +242,8 @@ DWORD WINAPI Player::Server(LPVOID lpParam){
 								NetworkMessage output(NetworkMessage::XTEA);
 								//Add char list
 								output.AddByte(0x64);
-								output.AddByte(characters.size());
-								for(int i = 0; i < characters.size(); i++){
+								output.AddByte(static_cast<uint8_t>(characters.size()));
+								for(size_t i = 0; i < characters.size(); i++){
 									output.AddString(characters[i]);
 									output.AddString("CAM");
 									output.AddU32(16777343);
@@ -427,6 +427,7 @@ DWORD WINAPI Player::Server(LPVOID lpParam){
 	}
 	
 	player->m_online = false;
+	return 0;
 }
 
 bool Player::running(){
@@ -460,14 +461,14 @@ void Player::stop(){
 void Player::increaseSpeed(){
 	if(running()){
 		ScopedLock lock(m_informationLock);
-		setSpeed(std::min(256.0, getSpeed() * 2));
+		setSpeed(std::min<double>(256.0, getSpeed() * 2));
 	}
 }
 
 void Player::decreaseSpeed(){
 	if(running()){
 		ScopedLock lock(m_informationLock);
-		setSpeed(std::max(0.0625, getSpeed() / 2.0));
+		setSpeed(std::max<double>(0.0625, getSpeed() / 2.0));
 	}
 }
 
@@ -590,6 +591,6 @@ void Player::wait(double timescale /* = 1.0 */){
 	if(m_fastForward){
 		m_timeSleep = 0;
 	} else {
-		m_timeSleep = Timer::tickCount() + ((packet->first - m_timeAlignment) / timescale);
+		m_timeSleep = static_cast<uint64_t>(Timer::tickCount() + ((packet->first - m_timeAlignment) / timescale));
 	}
 }

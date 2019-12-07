@@ -57,7 +57,7 @@ void LabelEx::draw(int surface){
 	/* Absolute position of this element */
 	Position* absolute = GUIElement::getAbsolutePos();
 	
-	for(int j = 0; j < m_lines.size(); j++){
+	for(int j = 0; j < static_cast<int>(m_lines.size()); j++){
 		Painter::drawText(surface, absolute->x, absolute->y + j * 14, m_label.font, m_label.red, m_label.green, m_label.blue, (char*)m_lines[j].c_str(), m_label.align);
 	}
 }

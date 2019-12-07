@@ -1,7 +1,8 @@
 /* Definitions for GNU multiple precision functions.   -*- mode: c -*-
 
 Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, 
+Inc.
 
 Copyright 2008 William Hart, Gonzalo Tornaria
 
@@ -22,7 +23,14 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 
 #ifndef __GMP_H__
 
+#ifdef __SUNPRO_CC    /* See: http://trac.sagemath.org/sage_trac/ticket/7849 */
+#include <stddef.h>   /* This is Bill Hart's fix, but I've applied it only */
+#include <stdarg.h>   /* on Sun Studio */
+#endif 
+
 #if defined (__cplusplus)
+
+#include <cstddef>     /* for size_t */
 #include <iosfwd>   /* for std::istream, std::ostream, std::string */
 #include <cstdio>
 #endif
@@ -30,21 +38,17 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 
 /* Instantiated by configure. */
 #if ! defined (__GMP_WITHIN_CONFIGURE)
-#  if defined( _MSC_VER )
-#    if defined( _WIN64 )
-#        define SIZEOF_MP_LIMB_T           8
-#        define _LONG_LONG_LIMB            1
-#    elif defined( _WIN32 )
-#        define SIZEOF_MP_LIMB_T           4
-#        ifdef _LONG_LONG_LIMB
-#          undef _LONG_LONG_LIMB
-#        endif
-#    else
-#        error This is the wrong version of mpir.h
-#    endif
-#  endif
-#  define GMP_LIMB_BITS            (SIZEOF_MP_LIMB_T << 3)
-#  define GMP_NAIL_BITS            0
+#ifdef _WIN32 
+#  ifdef _WIN64 
+#    define _LONG_LONG_LIMB  1 
+#    define GMP_LIMB_BITS   64 
+#  else 
+#    define GMP_LIMB_BITS   32 
+#  endif 
+#  define __GMP_BITS_PER_MP_LIMB  GMP_LIMB_BITS 
+#  define SIZEOF_MP_LIMB_T (GMP_LIMB_BITS >> 3) 
+#  define GMP_NAIL_BITS                       0 
+#endif 
 #endif
 #define GMP_NUMB_BITS     (GMP_LIMB_BITS - GMP_NAIL_BITS)
 #define GMP_NUMB_MASK     ((~ __GMP_CAST (mp_limb_t, 0)) >> GMP_NAIL_BITS)
@@ -52,22 +56,23 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 #define GMP_NAIL_MASK     (~ GMP_NUMB_MASK)
 
 
-/* The following (everything under ifndef __GNU_MP__) must be identical in
-   mpir.h and mp.h to allow both to be included in an application or during
-   the library build.  */
 #ifndef __GNU_MP__
 #define __GNU_MP__ 4
 
 #define __need_size_t  /* tell gcc stddef.h we only want size_t */
-#if defined (__cplusplus)
-#include <cstddef>     /* for size_t */
-#else
+#if ! defined (__cplusplus)
 #include <stddef.h>    /* for size_t */
 #endif
 #undef __need_size_t
 
 /* Instantiated by configure. */
+#if ! defined (__GMP_WITHIN_CONFIGURE)
+#endif
 
+/*  #if defined(__GMP_WITHIN_CONFIGURE) && defined(_WIN64)   */
+#ifdef __WIN64
+#define _LONG_LONG_LIMB	1
+#endif
 
 /* __STDC__ - some ANSI compilers define this only to 0, hence the use of
        "defined" and not "__STDC__-0".  In particular Sun workshop C 5.0
@@ -177,6 +182,16 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 #define __GMP_DECLSPEC_IMPORT  _Import
 #endif
 
+#if defined( _MSC_VER )
+#  if defined( MSC_BUILD_DLL )
+#    define __GMP_LIBGMP_DLL   1
+#    define __GMP_WITHIN_GMP   1
+#    define __GMP_WITHIN_GMPXX 1
+#  elif defined( MSC_USE_DLL )
+#    define __GMP_LIBGMP_DLL   1
+#  endif
+#endif
+
 #if __GMP_LIBGMP_DLL
 #if __GMP_WITHIN_GMP
 /* compiling to go into a DLL libmpir */
@@ -204,11 +219,22 @@ typedef long int		mp_limb_signed_t;
 #endif
 #endif
 
-#if defined( _MSC_VER ) && defined( _WIN64 )
-typedef unsigned long long int	mp_bitcnt_t;
+#ifdef _WIN64
+#define BITS_PER_UI         BITS_PER_MP_LIMB
+typedef mp_limb_t           mpir_ui;
+typedef mp_limb_signed_t    mpir_si;
+typedef mpir_ui             mp_bitcnt_t;
 #else
-typedef unsigned long int mp_bitcnt_t;
+#define BITS_PER_UI         BITS_PER_ULONG
+typedef unsigned long       mpir_ui;
+typedef long                mpir_si;
+typedef mpir_ui             mp_bitcnt_t;
 #endif
+#define GMP_UI_MAX          ((mpir_ui)(~(mpir_ui)0))
+#define GMP_UI_HIBIT        (GMP_UI_MAX ^ (GMP_UI_MAX >> 1))
+#define GMP_SI_MAX          ((mpir_si)(GMP_UI_MAX ^ GMP_UI_HIBIT))
+#define GMP_SI_MIN          ((mpir_si)GMP_UI_HIBIT)
+#define __GMP_BITCNT_MAX    (~(mp_bitcnt_t)0)
 
 /* For reference, note that the name __mpz_struct gets into C++ mangled
    function names, which means although the "__" suggests an internal, we
@@ -229,12 +255,7 @@ typedef __mpz_struct mpz_t[1];
 
 typedef mp_limb_t *		mp_ptr;
 typedef __gmp_const mp_limb_t *	mp_srcptr;
-#if defined (_CRAY) && ! defined (_CRAYMPP)
-/* plain `int' is much faster (48 bits) */
-#define __GMP_MP_SIZE_T_INT     1
-typedef int			mp_size_t;
-typedef int			mp_exp_t;
-#elif defined( _WIN64)
+#if defined( _WIN64)
 #define __GMP_MP_SIZE_T_INT     0
 typedef long long int	mp_size_t;
 typedef long int		mp_exp_t;
@@ -295,8 +316,6 @@ typedef __gmp_const __mpq_struct *mpq_srcptr;
 typedef __mpq_struct *mpq_ptr;
 
 
-/* This is not wanted in mp.h, so put it outside the __GNU_MP__ common
-   section. */
 #if __GMP_LIBGMP_DLL
 #if __GMP_WITHIN_GMPXX
 /* compiling to go into a DLL libmpirxx */
@@ -335,7 +354,6 @@ typedef __mpq_struct *mpq_ptr;
   || defined (__STDIO_H)              /* Borland */             \
   || defined (__STDIO_H__)            /* IRIX */                \
   || defined (_STDIO_INCLUDED)        /* HPUX */                \
-  || defined (__dj_include_stdio_h_)  /* DJGPP */               \
   || defined (_FILE_DEFINED)          /* Microsoft */           \
   || defined (__STDIO__)              /* Apple MPW MrC */       \
   || defined (_MSL_STDIO_H)           /* Metrowerks */          \
@@ -530,13 +548,6 @@ typedef __mpq_struct *mpq_ptr;
 #define __GMP_UNLIKELY(cond)  (cond)
 #endif
 
-#ifdef _CRAY
-#define __GMP_CRAY_Pragma(str)  _Pragma (str)
-#else
-#define __GMP_CRAY_Pragma(str)
-#endif
-
-
 /* Allow direct user access to numerator and denominator of a mpq_t object.  */
 #define mpq_numref(Q) (&((Q)->_mp_num))
 #define mpq_denref(Q) (&((Q)->_mp_den))
@@ -577,7 +588,7 @@ __GMP_DECLSPEC void gmp_randinit_default __GMP_PROTO ((gmp_randstate_t));
 
 #define gmp_randinit_lc_2exp __gmp_randinit_lc_2exp
 __GMP_DECLSPEC void gmp_randinit_lc_2exp __GMP_PROTO ((gmp_randstate_t,
-						       mpz_srcptr, unsigned long int,
+						       mpz_srcptr, mpir_ui,
 						       mp_bitcnt_t));
 
 #define gmp_randinit_lc_2exp_size __gmp_randinit_lc_2exp_size
@@ -593,16 +604,16 @@ __GMP_DECLSPEC void gmp_randinit_set __GMP_PROTO ((gmp_randstate_t, __gmp_const 
 __GMP_DECLSPEC void gmp_randseed __GMP_PROTO ((gmp_randstate_t, mpz_srcptr));
 
 #define gmp_randseed_ui __gmp_randseed_ui
-__GMP_DECLSPEC void gmp_randseed_ui __GMP_PROTO ((gmp_randstate_t, unsigned long int));
+__GMP_DECLSPEC void gmp_randseed_ui __GMP_PROTO ((gmp_randstate_t, mpir_ui));
 
 #define gmp_randclear __gmp_randclear
 __GMP_DECLSPEC void gmp_randclear __GMP_PROTO ((gmp_randstate_t));
 
 #define gmp_urandomb_ui __gmp_urandomb_ui
-__GMP_DECLSPEC unsigned long gmp_urandomb_ui __GMP_PROTO ((gmp_randstate_t, unsigned long));
+__GMP_DECLSPEC mpir_ui gmp_urandomb_ui __GMP_PROTO ((gmp_randstate_t, mpir_ui));
 
 #define gmp_urandomm_ui __gmp_urandomm_ui
-__GMP_DECLSPEC unsigned long gmp_urandomm_ui __GMP_PROTO ((gmp_randstate_t, unsigned long));
+__GMP_DECLSPEC mpir_ui gmp_urandomm_ui __GMP_PROTO ((gmp_randstate_t, mpir_ui));
 
 
 /**************** Formatted output routines.  ****************/
@@ -691,8 +702,6 @@ __GMP_DECLSPEC int gmp_vsscanf __GMP_PROTO ((__gmp_const char *, __gmp_const cha
 
 /**************** Integer (i.e. Z) routines.  ****************/
 
-#define __GMP_BITS_PER_ULONG	(8*sizeof(unsigned long))
-
 #define _mpz_realloc __gmpz_realloc
 #define mpz_realloc __gmpz_realloc
 __GMP_DECLSPEC void *_mpz_realloc __GMP_PROTO ((mpz_ptr, mp_size_t));
@@ -707,15 +716,15 @@ __GMP_DECLSPEC void mpz_abs __GMP_PROTO ((mpz_ptr, mpz_srcptr));
 #define mpz_add __gmpz_add
 __GMP_DECLSPEC void mpz_add __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
-#define __GMP_MPZ_ADD_UI_MIN_ALLOC(x,y,z) (__GMP_MAX(__GMP_ABS(y->_mp_size),1+(__GMP_BITS_PER_ULONG-1)/GMP_NUMB_BITS)+1)
+#define __GMP_MPZ_ADD_UI_MIN_ALLOC(x,y,z) (__GMP_MAX(__GMP_ABS(y->_mp_size),1+(GMP_BITS_PER_UI-1)/GMP_NUMB_BITS)+1)
 #define mpz_add_ui __gmpz_add_ui
-__GMP_DECLSPEC void mpz_add_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpz_add_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_addmul __gmpz_addmul
 __GMP_DECLSPEC void mpz_addmul __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_addmul_ui __gmpz_addmul_ui
-__GMP_DECLSPEC void mpz_addmul_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpz_addmul_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_and __gmpz_and
 __GMP_DECLSPEC void mpz_and __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
@@ -724,25 +733,25 @@ __GMP_DECLSPEC void mpz_and __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 __GMP_DECLSPEC void mpz_array_init __GMP_PROTO ((mpz_ptr, mp_size_t, mp_size_t));
 
 #define mpz_bin_ui __gmpz_bin_ui
-__GMP_DECLSPEC void mpz_bin_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpz_bin_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_bin_uiui __gmpz_bin_uiui
-__GMP_DECLSPEC void mpz_bin_uiui __GMP_PROTO ((mpz_ptr, unsigned long int, unsigned long int));
+__GMP_DECLSPEC void mpz_bin_uiui __GMP_PROTO ((mpz_ptr, mpir_ui, mpir_ui));
 
 #define mpz_cdiv_q __gmpz_cdiv_q
 __GMP_DECLSPEC void mpz_cdiv_q __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_cdiv_q_2exp __gmpz_cdiv_q_2exp
-__GMP_DECLSPEC void mpz_cdiv_q_2exp __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long));
+__GMP_DECLSPEC void mpz_cdiv_q_2exp __GMP_PROTO ((mpz_ptr, mpz_srcptr, mp_bitcnt_t));
 
 #define mpz_cdiv_q_ui __gmpz_cdiv_q_ui
-__GMP_DECLSPEC unsigned long int mpz_cdiv_q_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_cdiv_q_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_cdiv_qr __gmpz_cdiv_qr
 __GMP_DECLSPEC void mpz_cdiv_qr __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_cdiv_qr_ui __gmpz_cdiv_qr_ui
-__GMP_DECLSPEC unsigned long int mpz_cdiv_qr_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_cdiv_qr_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_cdiv_r __gmpz_cdiv_r
 __GMP_DECLSPEC void mpz_cdiv_r __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
@@ -751,10 +760,10 @@ __GMP_DECLSPEC void mpz_cdiv_r __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 __GMP_DECLSPEC void mpz_cdiv_r_2exp __GMP_PROTO ((mpz_ptr, mpz_srcptr, mp_bitcnt_t));
 
 #define mpz_cdiv_r_ui __gmpz_cdiv_r_ui
-__GMP_DECLSPEC unsigned long int mpz_cdiv_r_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_cdiv_r_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_cdiv_ui __gmpz_cdiv_ui
-__GMP_DECLSPEC unsigned long int mpz_cdiv_ui __GMP_PROTO ((mpz_srcptr, unsigned long int)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC mpir_ui mpz_cdiv_ui __GMP_PROTO ((mpz_srcptr, mpir_ui)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_clear __gmpz_clear
 __GMP_DECLSPEC void mpz_clear __GMP_PROTO ((mpz_ptr));
@@ -772,10 +781,10 @@ __GMP_DECLSPEC int mpz_cmp __GMP_PROTO ((mpz_srcptr, mpz_srcptr)) __GMP_NOTHROW 
 __GMP_DECLSPEC int mpz_cmp_d __GMP_PROTO ((mpz_srcptr, double)) __GMP_ATTRIBUTE_PURE;
 
 #define _mpz_cmp_si __gmpz_cmp_si
-__GMP_DECLSPEC int _mpz_cmp_si __GMP_PROTO ((mpz_srcptr, signed long int)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int _mpz_cmp_si __GMP_PROTO ((mpz_srcptr, mpir_si)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define _mpz_cmp_ui __gmpz_cmp_ui
-__GMP_DECLSPEC int _mpz_cmp_ui __GMP_PROTO ((mpz_srcptr, unsigned long int)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int _mpz_cmp_ui __GMP_PROTO ((mpz_srcptr, mpir_ui)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpz_cmpabs __gmpz_cmpabs
 __GMP_DECLSPEC int mpz_cmpabs __GMP_PROTO ((mpz_srcptr, mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
@@ -784,7 +793,7 @@ __GMP_DECLSPEC int mpz_cmpabs __GMP_PROTO ((mpz_srcptr, mpz_srcptr)) __GMP_NOTHR
 __GMP_DECLSPEC int mpz_cmpabs_d __GMP_PROTO ((mpz_srcptr, double)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_cmpabs_ui __gmpz_cmpabs_ui
-__GMP_DECLSPEC int mpz_cmpabs_ui __GMP_PROTO ((mpz_srcptr, unsigned long int)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpz_cmpabs_ui __GMP_PROTO ((mpz_srcptr, mpir_ui)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpz_com __gmpz_com
 __GMP_DECLSPEC void mpz_com __GMP_PROTO ((mpz_ptr, mpz_srcptr));
@@ -799,19 +808,19 @@ __GMP_DECLSPEC int mpz_congruent_p __GMP_PROTO ((mpz_srcptr, mpz_srcptr, mpz_src
 __GMP_DECLSPEC int mpz_congruent_2exp_p __GMP_PROTO ((mpz_srcptr, mpz_srcptr, mp_bitcnt_t)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpz_congruent_ui_p __gmpz_congruent_ui_p
-__GMP_DECLSPEC int mpz_congruent_ui_p __GMP_PROTO ((mpz_srcptr, unsigned long, unsigned long)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpz_congruent_ui_p __GMP_PROTO ((mpz_srcptr, mpir_ui, mpir_ui)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_divexact __gmpz_divexact
 __GMP_DECLSPEC void mpz_divexact __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_divexact_ui __gmpz_divexact_ui
-__GMP_DECLSPEC void mpz_divexact_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long));
+__GMP_DECLSPEC void mpz_divexact_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_divisible_p __gmpz_divisible_p
 __GMP_DECLSPEC int mpz_divisible_p __GMP_PROTO ((mpz_srcptr, mpz_srcptr)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_divisible_ui_p __gmpz_divisible_ui_p
-__GMP_DECLSPEC int mpz_divisible_ui_p __GMP_PROTO ((mpz_srcptr, unsigned long)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpz_divisible_ui_p __GMP_PROTO ((mpz_srcptr, mpir_ui)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_divisible_2exp_p __gmpz_divisible_2exp_p
 __GMP_DECLSPEC int mpz_divisible_2exp_p __GMP_PROTO ((mpz_srcptr, mp_bitcnt_t)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
@@ -823,7 +832,16 @@ __GMP_DECLSPEC void mpz_dump __GMP_PROTO ((mpz_srcptr));
 __GMP_DECLSPEC void *mpz_export __GMP_PROTO ((void *, size_t *, int, size_t, int, size_t, mpz_srcptr));
 
 #define mpz_fac_ui __gmpz_fac_ui
-__GMP_DECLSPEC void mpz_fac_ui __GMP_PROTO ((mpz_ptr, unsigned long int));
+__GMP_DECLSPEC void mpz_fac_ui __GMP_PROTO ((mpz_ptr, mpir_ui));
+
+#define mpz_2fac_ui __gmpz_2fac_ui
+__GMP_DECLSPEC void mpz_2fac_ui __GMP_PROTO ((mpz_ptr, mpir_ui));
+
+#define mpz_mfac_uiui __gmpz_mfac_uiui
+__GMP_DECLSPEC void mpz_mfac_uiui __GMP_PROTO ((mpz_ptr, mpir_ui, mpir_ui));
+
+#define mpz_primorial_ui __gmpz_primorial_ui
+__GMP_DECLSPEC void mpz_primorial_ui __GMP_PROTO ((mpz_ptr, mpir_ui));
 
 #define mpz_fdiv_q __gmpz_fdiv_q
 __GMP_DECLSPEC void mpz_fdiv_q __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
@@ -832,13 +850,13 @@ __GMP_DECLSPEC void mpz_fdiv_q __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 __GMP_DECLSPEC void mpz_fdiv_q_2exp __GMP_PROTO ((mpz_ptr, mpz_srcptr, mp_bitcnt_t));
 
 #define mpz_fdiv_q_ui __gmpz_fdiv_q_ui
-__GMP_DECLSPEC unsigned long int mpz_fdiv_q_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_fdiv_q_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_fdiv_qr __gmpz_fdiv_qr
 __GMP_DECLSPEC void mpz_fdiv_qr __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_fdiv_qr_ui __gmpz_fdiv_qr_ui
-__GMP_DECLSPEC unsigned long int mpz_fdiv_qr_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_fdiv_qr_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_fdiv_r __gmpz_fdiv_r
 __GMP_DECLSPEC void mpz_fdiv_r __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
@@ -847,19 +865,22 @@ __GMP_DECLSPEC void mpz_fdiv_r __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 __GMP_DECLSPEC void mpz_fdiv_r_2exp __GMP_PROTO ((mpz_ptr, mpz_srcptr, mp_bitcnt_t));
 
 #define mpz_fdiv_r_ui __gmpz_fdiv_r_ui
-__GMP_DECLSPEC unsigned long int mpz_fdiv_r_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_fdiv_r_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_fdiv_ui __gmpz_fdiv_ui
-__GMP_DECLSPEC unsigned long int mpz_fdiv_ui __GMP_PROTO ((mpz_srcptr, unsigned long int)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC mpir_ui mpz_fdiv_ui __GMP_PROTO ((mpz_srcptr, mpir_ui)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_fib_ui __gmpz_fib_ui
-__GMP_DECLSPEC void mpz_fib_ui __GMP_PROTO ((mpz_ptr, unsigned long int));
+__GMP_DECLSPEC void mpz_fib_ui __GMP_PROTO ((mpz_ptr, mpir_ui));
 
 #define mpz_fib2_ui __gmpz_fib2_ui
-__GMP_DECLSPEC void mpz_fib2_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, unsigned long int));
+__GMP_DECLSPEC void mpz_fib2_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, mpir_ui));
 
 #define mpz_fits_sint_p __gmpz_fits_sint_p
 __GMP_DECLSPEC int mpz_fits_sint_p __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+
+#define mpz_fits_si_p __gmpz_fits_si_p
+__GMP_DECLSPEC int mpz_fits_si_p __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpz_fits_slong_p __gmpz_fits_slong_p
 __GMP_DECLSPEC int mpz_fits_slong_p __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
@@ -870,6 +891,11 @@ __GMP_DECLSPEC int mpz_fits_sshort_p __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __
 #define mpz_fits_uint_p __gmpz_fits_uint_p
 #if __GMP_INLINE_PROTOTYPES || defined (__GMP_FORCE_mpz_fits_uint_p)
 __GMP_DECLSPEC int mpz_fits_uint_p __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+#endif
+
+#define mpz_fits_ui_p __gmpz_fits_ui_p
+#if __GMP_INLINE_PROTOTYPES || defined (__GMP_FORCE_mpz_fits_ui_p)
+__GMP_DECLSPEC int mpz_fits_ui_p __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 #endif
 
 #define mpz_fits_ulong_p __gmpz_fits_ulong_p
@@ -886,7 +912,7 @@ __GMP_DECLSPEC int mpz_fits_ushort_p __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __
 __GMP_DECLSPEC void mpz_gcd __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_gcd_ui __gmpz_gcd_ui
-__GMP_DECLSPEC unsigned long int mpz_gcd_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_gcd_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_gcdext __gmpz_gcdext
 __GMP_DECLSPEC void mpz_gcdext __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_ptr, mpz_srcptr, mpz_srcptr));
@@ -895,17 +921,17 @@ __GMP_DECLSPEC void mpz_gcdext __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_ptr, mpz_srcp
 __GMP_DECLSPEC double mpz_get_d __GMP_PROTO ((mpz_srcptr)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_get_d_2exp __gmpz_get_d_2exp
-__GMP_DECLSPEC double mpz_get_d_2exp __GMP_PROTO ((signed long int *, mpz_srcptr));
+__GMP_DECLSPEC double mpz_get_d_2exp __GMP_PROTO ((mpir_si *, mpz_srcptr));
 
 #define mpz_get_si __gmpz_get_si
-__GMP_DECLSPEC /* signed */ long int mpz_get_si __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC /* signed */ mpir_si mpz_get_si __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpz_get_str __gmpz_get_str
 __GMP_DECLSPEC char *mpz_get_str __GMP_PROTO ((char *, int, mpz_srcptr));
 
 #define mpz_get_ui __gmpz_get_ui
 #if __GMP_INLINE_PROTOTYPES || defined (__GMP_FORCE_mpz_get_ui)
-__GMP_DECLSPEC unsigned long int mpz_get_ui __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC mpir_ui mpz_get_ui __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 #endif
 
 #define mpz_getlimbn __gmpz_getlimbn
@@ -935,13 +961,13 @@ __GMP_DECLSPEC void mpz_init_set __GMP_PROTO ((mpz_ptr, mpz_srcptr));
 __GMP_DECLSPEC void mpz_init_set_d __GMP_PROTO ((mpz_ptr, double));
 
 #define mpz_init_set_si __gmpz_init_set_si
-__GMP_DECLSPEC void mpz_init_set_si __GMP_PROTO ((mpz_ptr, signed long int));
+__GMP_DECLSPEC void mpz_init_set_si __GMP_PROTO ((mpz_ptr, mpir_si));
 
 #define mpz_init_set_str __gmpz_init_set_str
 __GMP_DECLSPEC int mpz_init_set_str __GMP_PROTO ((mpz_ptr, __gmp_const char *, int));
 
 #define mpz_init_set_ui __gmpz_init_set_ui
-__GMP_DECLSPEC void mpz_init_set_ui __GMP_PROTO ((mpz_ptr, unsigned long int));
+__GMP_DECLSPEC void mpz_init_set_ui __GMP_PROTO ((mpz_ptr, mpir_ui));
 
 #define mpz_inp_raw __gmpz_inp_raw
 #ifdef _GMP_H_HAVE_FILE
@@ -965,33 +991,36 @@ __GMP_DECLSPEC int mpz_jacobi __GMP_PROTO ((mpz_srcptr, mpz_srcptr)) __GMP_ATTRI
 #define mpz_kronecker mpz_jacobi  /* alias */
 
 #define mpz_kronecker_si __gmpz_kronecker_si
-__GMP_DECLSPEC int mpz_kronecker_si __GMP_PROTO ((mpz_srcptr, long)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpz_kronecker_si __GMP_PROTO ((mpz_srcptr, mpir_si)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_kronecker_ui __gmpz_kronecker_ui
-__GMP_DECLSPEC int mpz_kronecker_ui __GMP_PROTO ((mpz_srcptr, unsigned long)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpz_kronecker_ui __GMP_PROTO ((mpz_srcptr, mpir_ui)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_si_kronecker __gmpz_si_kronecker
-__GMP_DECLSPEC int mpz_si_kronecker __GMP_PROTO ((long, mpz_srcptr)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpz_si_kronecker __GMP_PROTO ((mpir_si, mpz_srcptr)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_ui_kronecker __gmpz_ui_kronecker
-__GMP_DECLSPEC int mpz_ui_kronecker __GMP_PROTO ((unsigned long, mpz_srcptr)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpz_ui_kronecker __GMP_PROTO ((mpir_ui, mpz_srcptr)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_lcm __gmpz_lcm
 __GMP_DECLSPEC void mpz_lcm __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_lcm_ui __gmpz_lcm_ui
-__GMP_DECLSPEC void mpz_lcm_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long));
+__GMP_DECLSPEC void mpz_lcm_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_legendre mpz_jacobi  /* alias */
 
 #define mpz_lucnum_ui __gmpz_lucnum_ui
-__GMP_DECLSPEC void mpz_lucnum_ui __GMP_PROTO ((mpz_ptr, unsigned long int));
+__GMP_DECLSPEC void mpz_lucnum_ui __GMP_PROTO ((mpz_ptr, mpir_ui));
 
 #define mpz_lucnum2_ui __gmpz_lucnum2_ui
-__GMP_DECLSPEC void mpz_lucnum2_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, unsigned long int));
+__GMP_DECLSPEC void mpz_lucnum2_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, mpir_ui));
 
 #define mpz_millerrabin __gmpz_millerrabin
 __GMP_DECLSPEC int mpz_millerrabin __GMP_PROTO ((mpz_srcptr, int)) __GMP_ATTRIBUTE_PURE;
+
+#define mpz_miller_rabin __gmpz_miller_rabin
+__GMP_DECLSPEC int mpz_miller_rabin __GMP_PROTO ((mpz_srcptr, int, gmp_randstate_t)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_mod __gmpz_mod
 __GMP_DECLSPEC void mpz_mod __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
@@ -1005,13 +1034,13 @@ __GMP_DECLSPEC void mpz_mul __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 #define mpz_mul_2exp __gmpz_mul_2exp
 __GMP_DECLSPEC void mpz_mul_2exp __GMP_PROTO ((mpz_ptr, mpz_srcptr, mp_bitcnt_t));
 
-#define __GMP_MPZ_MUL_SI_MIN_ALLOC(x,y,z) (__GMP_ABS(y->_mp_size)+(__GMP_BITS_PER_ULONG-1)/GMP_NUMB_BITS+1)
+#define __GMP_MPZ_MUL_SI_MIN_ALLOC(x,y,z) (__GMP_ABS(y->_mp_size)+(GMP_BITS_PER_UI-1)/GMP_NUMB_BITS+1)
 #define mpz_mul_si __gmpz_mul_si
-__GMP_DECLSPEC void mpz_mul_si __GMP_PROTO ((mpz_ptr, mpz_srcptr, long int));
+__GMP_DECLSPEC void mpz_mul_si __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_si));
 
-#define __GMP_MPZ_MUL_UI_MIN_ALLOC(x,y,z) (__GMP_ABS(y->_mp_size)+(__GMP_BITS_PER_ULONG-1)/GMP_NUMB_BITS+1)
+#define __GMP_MPZ_MUL_UI_MIN_ALLOC(x,y,z) (__GMP_ABS(y->_mp_size)+(GMP_BITS_PER_UI-1)/GMP_NUMB_BITS+1)
 #define mpz_mul_ui __gmpz_mul_ui
-__GMP_DECLSPEC void mpz_mul_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpz_mul_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_neg __gmpz_neg
 #define __GMP_MPZ_NEG_MIN_ALLOC(x,y) (__GMP_ABS(y->_mp_size))
@@ -1022,8 +1051,8 @@ __GMP_DECLSPEC void mpz_neg __GMP_PROTO ((mpz_ptr, mpz_srcptr));
 #define mpz_nextprime __gmpz_nextprime
 __GMP_DECLSPEC void mpz_nextprime __GMP_PROTO ((mpz_ptr, mpz_srcptr));
 
-#define mpz_next_likely_prime __gmpz_next_likely_prime
-__GMP_DECLSPEC void mpz_next_likely_prime __GMP_PROTO ((mpz_ptr, mpz_srcptr,gmp_randstate_t));
+#define mpz_next_prime_candidate __gmpz_next_prime_candidate
+__GMP_DECLSPEC void mpz_next_prime_candidate __GMP_PROTO ((mpz_ptr, mpz_srcptr, gmp_randstate_t));
 
 #define mpz_out_raw __gmpz_out_raw
 #ifdef _GMP_H_HAVE_FILE
@@ -1049,37 +1078,37 @@ __GMP_DECLSPEC mp_bitcnt_t mpz_popcount __GMP_PROTO ((mpz_srcptr)) __GMP_NOTHROW
 #endif
 
 #define mpz_pow_ui __gmpz_pow_ui
-__GMP_DECLSPEC void mpz_pow_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpz_pow_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_powm __gmpz_powm
 __GMP_DECLSPEC void mpz_powm __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_powm_ui __gmpz_powm_ui
-__GMP_DECLSPEC void mpz_powm_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int, mpz_srcptr));
+__GMP_DECLSPEC void mpz_powm_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui, mpz_srcptr));
 
 #define mpz_probab_prime_p __gmpz_probab_prime_p
 __GMP_DECLSPEC int mpz_probab_prime_p __GMP_PROTO ((mpz_srcptr, int)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_probable_prime_p __gmpz_probable_prime_p
-__GMP_DECLSPEC int mpz_probable_prime_p __GMP_PROTO ((mpz_srcptr,gmp_randstate_t, int,unsigned long));
+__GMP_DECLSPEC int mpz_probable_prime_p __GMP_PROTO ((mpz_srcptr,gmp_randstate_t, int, mpir_ui));
 
 #define mpz_likely_prime_p __gmpz_likely_prime_p
-__GMP_DECLSPEC int mpz_likely_prime_p __GMP_PROTO ((mpz_srcptr,gmp_randstate_t, unsigned long));
+__GMP_DECLSPEC int mpz_likely_prime_p __GMP_PROTO ((mpz_srcptr,gmp_randstate_t, mpir_ui));
 
 #define mpz_realloc2 __gmpz_realloc2
 __GMP_DECLSPEC void mpz_realloc2 __GMP_PROTO ((mpz_ptr, mp_bitcnt_t));
 
 #define mpz_remove __gmpz_remove
-__GMP_DECLSPEC unsigned long int mpz_remove __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
+__GMP_DECLSPEC mp_bitcnt_t mpz_remove __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_root __gmpz_root
-__GMP_DECLSPEC int mpz_root __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC int mpz_root __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_nthroot __gmpz_nthroot
-__GMP_DECLSPEC void mpz_nthroot __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpz_nthroot __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_rootrem __gmpz_rootrem
-__GMP_DECLSPEC void mpz_rootrem __GMP_PROTO ((mpz_ptr,mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpz_rootrem __GMP_PROTO ((mpz_ptr,mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_rrandomb __gmpz_rrandomb
 __GMP_DECLSPEC void mpz_rrandomb __GMP_PROTO ((mpz_ptr, gmp_randstate_t, mp_bitcnt_t));
@@ -1105,16 +1134,16 @@ __GMP_DECLSPEC void mpz_set_f __GMP_PROTO ((mpz_ptr, mpf_srcptr));
 __GMP_DECLSPEC void mpz_set_q __GMP_PROTO ((mpz_ptr, mpq_srcptr));
 #endif
 
-#define __GMP_MPZ_SET_SI_MIN_ALLOC(x,y) (1+(__GMP_BITS_PER_ULONG-1)/GMP_NUMB_BITS)
+#define __GMP_MPZ_SET_SI_MIN_ALLOC(x,y) (1+(GMP_BITS_PER_UI-1)/GMP_NUMB_BITS)
 #define mpz_set_si __gmpz_set_si
-__GMP_DECLSPEC void mpz_set_si __GMP_PROTO ((mpz_ptr, signed long int));
+__GMP_DECLSPEC void mpz_set_si __GMP_PROTO ((mpz_ptr, mpir_si));
 
 #define mpz_set_str __gmpz_set_str
 __GMP_DECLSPEC int mpz_set_str __GMP_PROTO ((mpz_ptr, __gmp_const char *, int));
 
-#define __GMP_MPZ_SET_UI_MIN_ALLOC(x,y) (1+(__GMP_BITS_PER_ULONG-1)/GMP_NUMB_BITS)
+#define __GMP_MPZ_SET_UI_MIN_ALLOC(x,y) (1+(GMP_BITS_PER_UI-1)/GMP_NUMB_BITS)
 #define mpz_set_ui __gmpz_set_ui
-__GMP_DECLSPEC void mpz_set_ui __GMP_PROTO ((mpz_ptr, unsigned long int));
+__GMP_DECLSPEC void mpz_set_ui __GMP_PROTO ((mpz_ptr, mpir_ui));
 
 #define mpz_setbit __gmpz_setbit
 __GMP_DECLSPEC void mpz_setbit __GMP_PROTO ((mpz_ptr, mp_bitcnt_t));
@@ -1137,25 +1166,25 @@ __GMP_DECLSPEC void mpz_sqrtrem __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr));
 #define mpz_sub __gmpz_sub
 __GMP_DECLSPEC void mpz_sub __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
-#define __GMP_MPZ_SUB_UI_MIN_ALLOC(x,y,z) (__GMP_MAX(__GMP_ABS(y->_mp_size),1+(__GMP_BITS_PER_ULONG-1)/GMP_NUMB_BITS)+1)
+#define __GMP_MPZ_SUB_UI_MIN_ALLOC(x,y,z) (__GMP_MAX(__GMP_ABS(y->_mp_size),1+(GMP_BITS_PER_UI-1)/GMP_NUMB_BITS)+1)
 #define mpz_sub_ui __gmpz_sub_ui
-__GMP_DECLSPEC void mpz_sub_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpz_sub_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
-#define __GMP_MPZ_UI_SUB_MIN_ALLOC(x,y,z) (__GMP_MAX(__GMP_ABS(z->_mp_size),1+(__GMP_BITS_PER_ULONG-1)/GMP_NUMB_BITS)+1)
+#define __GMP_MPZ_UI_SUB_MIN_ALLOC(x,y,z) (__GMP_MAX(__GMP_ABS(z->_mp_size),1+(GMP_BITS_PER_UI-1)/GMP_NUMB_BITS)+1)
 #define mpz_ui_sub __gmpz_ui_sub
-__GMP_DECLSPEC void mpz_ui_sub __GMP_PROTO ((mpz_ptr, unsigned long int, mpz_srcptr));
+__GMP_DECLSPEC void mpz_ui_sub __GMP_PROTO ((mpz_ptr, mpir_ui, mpz_srcptr));
 
 #define mpz_submul __gmpz_submul
 __GMP_DECLSPEC void mpz_submul __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_submul_ui __gmpz_submul_ui
-__GMP_DECLSPEC void mpz_submul_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpz_submul_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_swap __gmpz_swap
 __GMP_DECLSPEC void mpz_swap __GMP_PROTO ((mpz_ptr, mpz_ptr)) __GMP_NOTHROW;
 
 #define mpz_tdiv_ui __gmpz_tdiv_ui
-__GMP_DECLSPEC unsigned long int mpz_tdiv_ui __GMP_PROTO ((mpz_srcptr, unsigned long int)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC mpir_ui mpz_tdiv_ui __GMP_PROTO ((mpz_srcptr, mpir_ui)) __GMP_ATTRIBUTE_PURE;
 
 #define mpz_tdiv_q __gmpz_tdiv_q
 __GMP_DECLSPEC void mpz_tdiv_q __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
@@ -1164,13 +1193,13 @@ __GMP_DECLSPEC void mpz_tdiv_q __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 __GMP_DECLSPEC void mpz_tdiv_q_2exp __GMP_PROTO ((mpz_ptr, mpz_srcptr, mp_bitcnt_t));
 
 #define mpz_tdiv_q_ui __gmpz_tdiv_q_ui
-__GMP_DECLSPEC unsigned long int mpz_tdiv_q_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_tdiv_q_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_tdiv_qr __gmpz_tdiv_qr
 __GMP_DECLSPEC void mpz_tdiv_qr __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 #define mpz_tdiv_qr_ui __gmpz_tdiv_qr_ui
-__GMP_DECLSPEC unsigned long int mpz_tdiv_qr_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_tdiv_qr_ui __GMP_PROTO ((mpz_ptr, mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_tdiv_r __gmpz_tdiv_r
 __GMP_DECLSPEC void mpz_tdiv_r __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
@@ -1179,13 +1208,13 @@ __GMP_DECLSPEC void mpz_tdiv_r __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 __GMP_DECLSPEC void mpz_tdiv_r_2exp __GMP_PROTO ((mpz_ptr, mpz_srcptr, mp_bitcnt_t));
 
 #define mpz_tdiv_r_ui __gmpz_tdiv_r_ui
-__GMP_DECLSPEC unsigned long int mpz_tdiv_r_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, unsigned long int));
+__GMP_DECLSPEC mpir_ui mpz_tdiv_r_ui __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpir_ui));
 
 #define mpz_tstbit __gmpz_tstbit
 __GMP_DECLSPEC int mpz_tstbit __GMP_PROTO ((mpz_srcptr, mp_bitcnt_t)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpz_ui_pow_ui __gmpz_ui_pow_ui
-__GMP_DECLSPEC void mpz_ui_pow_ui __GMP_PROTO ((mpz_ptr, unsigned long int, unsigned long int));
+__GMP_DECLSPEC void mpz_ui_pow_ui __GMP_PROTO ((mpz_ptr, mpir_ui, mpir_ui));
 
 #define mpz_urandomb __gmpz_urandomb
 __GMP_DECLSPEC void mpz_urandomb __GMP_PROTO ((mpz_ptr, gmp_randstate_t, mp_bitcnt_t));
@@ -1196,6 +1225,35 @@ __GMP_DECLSPEC void mpz_urandomm __GMP_PROTO ((mpz_ptr, gmp_randstate_t, mpz_src
 #define mpz_xor __gmpz_xor
 #define mpz_eor __gmpz_xor
 __GMP_DECLSPEC void mpz_xor __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
+
+#define MPZ_ROINIT_N(xp, xs) {{0, (xs),(xp) }}
+
+/****** Integer (i.e. Z) routines for intmaax_t/uintmax_t types ******/
+
+/* if stdint.h is available -- n.b: we do NOT include stdint.h ourselves */
+#if defined(INTMAX_MAX)
+
+#define __GMP_BITS_PER_UINTMAX  (8*sizeof(uintmax_t))
+
+#define mpz_get_ux __gmpz_get_ux
+__GMP_DECLSPEC uintmax_t mpz_get_ux __GMP_PROTO ((mpz_srcptr));
+
+#define mpz_get_sx __gmpz_get_sx
+__GMP_DECLSPEC intmax_t mpz_get_sx __GMP_PROTO ((mpz_srcptr));
+
+#define mpz_set_ux __gmpz_set_ux
+__GMP_DECLSPEC void mpz_set_ux __GMP_PROTO ((mpz_ptr, uintmax_t));
+
+#define mpz_set_sx __gmpz_set_sx
+__GMP_DECLSPEC void mpz_set_sx __GMP_PROTO ((mpz_ptr, intmax_t));
+
+#define mpz_init_set_ux __gmpz_init_set_ux
+__GMP_DECLSPEC void mpz_init_set_ux __GMP_PROTO ((mpz_ptr, uintmax_t));
+
+#define mpz_init_set_sx __gmpz_init_set_sx
+__GMP_DECLSPEC void mpz_init_set_sx __GMP_PROTO ((mpz_ptr, intmax_t));
+
+#endif
 
 
 /**************** Rational (i.e. Q) routines.  ****************/
@@ -1221,10 +1279,13 @@ __GMP_DECLSPEC void mpq_clears __GMP_PROTO ((mpq_ptr, ...));
 __GMP_DECLSPEC int mpq_cmp __GMP_PROTO ((mpq_srcptr, mpq_srcptr)) __GMP_ATTRIBUTE_PURE;
 
 #define _mpq_cmp_si __gmpq_cmp_si
-__GMP_DECLSPEC int _mpq_cmp_si __GMP_PROTO ((mpq_srcptr, long, unsigned long)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int _mpq_cmp_si __GMP_PROTO ((mpq_srcptr, mpir_si, mpir_ui)) __GMP_ATTRIBUTE_PURE;
 
 #define _mpq_cmp_ui __gmpq_cmp_ui
-__GMP_DECLSPEC int _mpq_cmp_ui __GMP_PROTO ((mpq_srcptr, unsigned long int, unsigned long int)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int _mpq_cmp_ui __GMP_PROTO ((mpq_srcptr, mpir_ui, mpir_ui)) __GMP_ATTRIBUTE_PURE;
+
+#define mpq_cmp_z __gmpq_cmp_z
+__GMP_DECLSPEC int mpq_cmp_z (mpq_srcptr, mpz_srcptr) __GMP_ATTRIBUTE_PURE;
 
 #define mpq_div __gmpq_div
 __GMP_DECLSPEC void mpq_div __GMP_PROTO ((mpq_ptr, mpq_srcptr, mpq_srcptr));
@@ -1293,13 +1354,13 @@ __GMP_DECLSPEC void mpq_set_f __GMP_PROTO ((mpq_ptr, mpf_srcptr));
 __GMP_DECLSPEC void mpq_set_num __GMP_PROTO ((mpq_ptr, mpz_srcptr));
 
 #define mpq_set_si __gmpq_set_si
-__GMP_DECLSPEC void mpq_set_si __GMP_PROTO ((mpq_ptr, signed long int, unsigned long int));
+__GMP_DECLSPEC void mpq_set_si __GMP_PROTO ((mpq_ptr, mpir_si, mpir_ui));
 
 #define mpq_set_str __gmpq_set_str
 __GMP_DECLSPEC int mpq_set_str __GMP_PROTO ((mpq_ptr, __gmp_const char *, int));
 
 #define mpq_set_ui __gmpq_set_ui
-__GMP_DECLSPEC void mpq_set_ui __GMP_PROTO ((mpq_ptr, unsigned long int, unsigned long int));
+__GMP_DECLSPEC void mpq_set_ui __GMP_PROTO ((mpq_ptr, mpir_ui, mpir_ui));
 
 #define mpq_set_z __gmpq_set_z
 __GMP_DECLSPEC void mpq_set_z __GMP_PROTO ((mpq_ptr, mpz_srcptr));
@@ -1320,7 +1381,7 @@ __GMP_DECLSPEC void mpf_abs __GMP_PROTO ((mpf_ptr, mpf_srcptr));
 __GMP_DECLSPEC void mpf_add __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpf_srcptr));
 
 #define mpf_add_ui __gmpf_add_ui
-__GMP_DECLSPEC void mpf_add_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpf_add_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpir_ui));
 #define mpf_ceil __gmpf_ceil
 __GMP_DECLSPEC void mpf_ceil __GMP_PROTO ((mpf_ptr, mpf_srcptr));
 
@@ -1337,10 +1398,10 @@ __GMP_DECLSPEC int mpf_cmp __GMP_PROTO ((mpf_srcptr, mpf_srcptr)) __GMP_NOTHROW 
 __GMP_DECLSPEC int mpf_cmp_d __GMP_PROTO ((mpf_srcptr, double)) __GMP_ATTRIBUTE_PURE;
 
 #define mpf_cmp_si __gmpf_cmp_si
-__GMP_DECLSPEC int mpf_cmp_si __GMP_PROTO ((mpf_srcptr, signed long int)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpf_cmp_si __GMP_PROTO ((mpf_srcptr, mpir_si)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpf_cmp_ui __gmpf_cmp_ui
-__GMP_DECLSPEC int mpf_cmp_ui __GMP_PROTO ((mpf_srcptr, unsigned long int)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpf_cmp_ui __GMP_PROTO ((mpf_srcptr, mpir_ui)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpf_div __gmpf_div
 __GMP_DECLSPEC void mpf_div __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpf_srcptr));
@@ -1349,16 +1410,19 @@ __GMP_DECLSPEC void mpf_div __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpf_srcptr));
 __GMP_DECLSPEC void mpf_div_2exp __GMP_PROTO ((mpf_ptr, mpf_srcptr, mp_bitcnt_t));
 
 #define mpf_div_ui __gmpf_div_ui
-__GMP_DECLSPEC void mpf_div_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpf_div_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpir_ui));
 
 #define mpf_dump __gmpf_dump
 __GMP_DECLSPEC void mpf_dump __GMP_PROTO ((mpf_srcptr));
 
 #define mpf_eq __gmpf_eq
-__GMP_DECLSPEC int mpf_eq __GMP_PROTO ((mpf_srcptr, mpf_srcptr, unsigned long int)) __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC int mpf_eq __GMP_PROTO ((mpf_srcptr, mpf_srcptr, mp_bitcnt_t)) __GMP_ATTRIBUTE_PURE;
 
 #define mpf_fits_sint_p __gmpf_fits_sint_p
 __GMP_DECLSPEC int mpf_fits_sint_p __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+
+#define mpf_fits_si_p __gmpf_fits_si_p
+__GMP_DECLSPEC int mpf_fits_si_p __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpf_fits_slong_p __gmpf_fits_slong_p
 __GMP_DECLSPEC int mpf_fits_slong_p __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
@@ -1368,6 +1432,9 @@ __GMP_DECLSPEC int mpf_fits_sshort_p __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __
 
 #define mpf_fits_uint_p __gmpf_fits_uint_p
 __GMP_DECLSPEC int mpf_fits_uint_p __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+
+#define mpf_fits_ui_p __gmpf_fits_ui_p
+__GMP_DECLSPEC int mpf_fits_ui_p __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpf_fits_ulong_p __gmpf_fits_ulong_p
 __GMP_DECLSPEC int mpf_fits_ulong_p __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
@@ -1382,7 +1449,7 @@ __GMP_DECLSPEC void mpf_floor __GMP_PROTO ((mpf_ptr, mpf_srcptr));
 __GMP_DECLSPEC double mpf_get_d __GMP_PROTO ((mpf_srcptr)) __GMP_ATTRIBUTE_PURE;
 
 #define mpf_get_d_2exp __gmpf_get_d_2exp
-__GMP_DECLSPEC double mpf_get_d_2exp __GMP_PROTO ((signed long int *, mpf_srcptr));
+__GMP_DECLSPEC double mpf_get_d_2exp __GMP_PROTO ((mpir_si *, mpf_srcptr));
 
 #define mpf_get_default_prec __gmpf_get_default_prec
 __GMP_DECLSPEC mp_bitcnt_t mpf_get_default_prec __GMP_PROTO ((void)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
@@ -1391,13 +1458,13 @@ __GMP_DECLSPEC mp_bitcnt_t mpf_get_default_prec __GMP_PROTO ((void)) __GMP_NOTHR
 __GMP_DECLSPEC mp_bitcnt_t mpf_get_prec __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpf_get_si __gmpf_get_si
-__GMP_DECLSPEC long mpf_get_si __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC mpir_si mpf_get_si __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpf_get_str __gmpf_get_str
 __GMP_DECLSPEC char *mpf_get_str __GMP_PROTO ((char *, mp_exp_t *, int, size_t, mpf_srcptr));
 
 #define mpf_get_ui __gmpf_get_ui
-__GMP_DECLSPEC unsigned long mpf_get_ui __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
+__GMP_DECLSPEC mpir_ui mpf_get_ui __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 
 #define mpf_init __gmpf_init
 __GMP_DECLSPEC void mpf_init __GMP_PROTO ((mpf_ptr));
@@ -1415,13 +1482,13 @@ __GMP_DECLSPEC void mpf_init_set __GMP_PROTO ((mpf_ptr, mpf_srcptr));
 __GMP_DECLSPEC void mpf_init_set_d __GMP_PROTO ((mpf_ptr, double));
 
 #define mpf_init_set_si __gmpf_init_set_si
-__GMP_DECLSPEC void mpf_init_set_si __GMP_PROTO ((mpf_ptr, signed long int));
+__GMP_DECLSPEC void mpf_init_set_si __GMP_PROTO ((mpf_ptr, mpir_si));
 
 #define mpf_init_set_str __gmpf_init_set_str
 __GMP_DECLSPEC int mpf_init_set_str __GMP_PROTO ((mpf_ptr, __gmp_const char *, int));
 
 #define mpf_init_set_ui __gmpf_init_set_ui
-__GMP_DECLSPEC void mpf_init_set_ui __GMP_PROTO ((mpf_ptr, unsigned long int));
+__GMP_DECLSPEC void mpf_init_set_ui __GMP_PROTO ((mpf_ptr, mpir_ui));
 
 #define mpf_inp_str __gmpf_inp_str
 #ifdef _GMP_H_HAVE_FILE
@@ -1438,7 +1505,7 @@ __GMP_DECLSPEC void mpf_mul __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpf_srcptr));
 __GMP_DECLSPEC void mpf_mul_2exp __GMP_PROTO ((mpf_ptr, mpf_srcptr, mp_bitcnt_t));
 
 #define mpf_mul_ui __gmpf_mul_ui
-__GMP_DECLSPEC void mpf_mul_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpf_mul_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpir_ui));
 
 #define mpf_neg __gmpf_neg
 __GMP_DECLSPEC void mpf_neg __GMP_PROTO ((mpf_ptr, mpf_srcptr));
@@ -1449,7 +1516,7 @@ __GMP_DECLSPEC size_t mpf_out_str __GMP_PROTO ((FILE *, int, size_t, mpf_srcptr)
 #endif
 
 #define mpf_pow_ui __gmpf_pow_ui
-__GMP_DECLSPEC void mpf_pow_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpf_pow_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpir_ui));
 
 #define mpf_random2 __gmpf_random2
 __GMP_DECLSPEC void mpf_random2 __GMP_PROTO ((mpf_ptr, mp_size_t, mp_exp_t));
@@ -1479,13 +1546,13 @@ __GMP_DECLSPEC void mpf_set_prec_raw __GMP_PROTO ((mpf_ptr, mp_bitcnt_t)) __GMP_
 __GMP_DECLSPEC void mpf_set_q __GMP_PROTO ((mpf_ptr, mpq_srcptr));
 
 #define mpf_set_si __gmpf_set_si
-__GMP_DECLSPEC void mpf_set_si __GMP_PROTO ((mpf_ptr, signed long int));
+__GMP_DECLSPEC void mpf_set_si __GMP_PROTO ((mpf_ptr, mpir_si));
 
 #define mpf_set_str __gmpf_set_str
 __GMP_DECLSPEC int mpf_set_str __GMP_PROTO ((mpf_ptr, __gmp_const char *, int));
 
 #define mpf_set_ui __gmpf_set_ui
-__GMP_DECLSPEC void mpf_set_ui __GMP_PROTO ((mpf_ptr, unsigned long int));
+__GMP_DECLSPEC void mpf_set_ui __GMP_PROTO ((mpf_ptr, mpir_ui));
 
 #define mpf_set_z __gmpf_set_z
 __GMP_DECLSPEC void mpf_set_z __GMP_PROTO ((mpf_ptr, mpz_srcptr));
@@ -1497,13 +1564,13 @@ __GMP_DECLSPEC size_t mpf_size __GMP_PROTO ((mpf_srcptr)) __GMP_NOTHROW __GMP_AT
 __GMP_DECLSPEC void mpf_sqrt __GMP_PROTO ((mpf_ptr, mpf_srcptr));
 
 #define mpf_sqrt_ui __gmpf_sqrt_ui
-__GMP_DECLSPEC void mpf_sqrt_ui __GMP_PROTO ((mpf_ptr, unsigned long int));
+__GMP_DECLSPEC void mpf_sqrt_ui __GMP_PROTO ((mpf_ptr, mpir_ui));
 
 #define mpf_sub __gmpf_sub
 __GMP_DECLSPEC void mpf_sub __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpf_srcptr));
 
 #define mpf_sub_ui __gmpf_sub_ui
-__GMP_DECLSPEC void mpf_sub_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, unsigned long int));
+__GMP_DECLSPEC void mpf_sub_ui __GMP_PROTO ((mpf_ptr, mpf_srcptr, mpir_ui));
 
 #define mpf_swap __gmpf_swap
 __GMP_DECLSPEC void mpf_swap __GMP_PROTO ((mpf_ptr, mpf_ptr)) __GMP_NOTHROW;
@@ -1512,10 +1579,10 @@ __GMP_DECLSPEC void mpf_swap __GMP_PROTO ((mpf_ptr, mpf_ptr)) __GMP_NOTHROW;
 __GMP_DECLSPEC void mpf_trunc __GMP_PROTO ((mpf_ptr, mpf_srcptr));
 
 #define mpf_ui_div __gmpf_ui_div
-__GMP_DECLSPEC void mpf_ui_div __GMP_PROTO ((mpf_ptr, unsigned long int, mpf_srcptr));
+__GMP_DECLSPEC void mpf_ui_div __GMP_PROTO ((mpf_ptr, mpir_ui, mpf_srcptr));
 
 #define mpf_ui_sub __gmpf_ui_sub
-__GMP_DECLSPEC void mpf_ui_sub __GMP_PROTO ((mpf_ptr, unsigned long int, mpf_srcptr));
+__GMP_DECLSPEC void mpf_ui_sub __GMP_PROTO ((mpf_ptr, mpir_ui, mpf_srcptr));
 
 #define mpf_urandomb __gmpf_urandomb
 __GMP_DECLSPEC void mpf_urandomb __GMP_PROTO ((mpf_t, gmp_randstate_t, mp_bitcnt_t));
@@ -1542,21 +1609,32 @@ __GMP_DECLSPEC mp_limb_t mpn_add_n __GMP_PROTO ((mp_ptr, mp_srcptr, mp_srcptr, m
 __GMP_DECLSPEC mp_limb_t mpn_addmul_1 __GMP_PROTO ((mp_ptr, mp_srcptr, mp_size_t, mp_limb_t));
 
 #define mpn_bdivmod __MPN(bdivmod)
-__GMP_DECLSPEC mp_limb_t mpn_bdivmod __GMP_PROTO ((mp_ptr, mp_ptr, mp_size_t, mp_srcptr, mp_size_t, unsigned long int));
+__GMP_DECLSPEC mp_limb_t mpn_bdivmod __GMP_PROTO ((mp_ptr, mp_ptr, mp_size_t, mp_srcptr, mp_size_t, mpir_ui));
 
 #define mpn_divrem __MPN(divrem)
 __GMP_DECLSPEC mp_limb_t mpn_divrem __GMP_PROTO ((mp_ptr, mp_size_t, mp_ptr, mp_size_t, mp_srcptr, mp_size_t));
 
-#define mpn_mulmod_2expp1 __MPN(mulmod_2expp1)
-__GMP_DECLSPEC int mpn_mulmod_2expp1 __GMP_PROTO ((mp_ptr, mp_srcptr, mp_srcptr,int,unsigned long, mp_ptr));
+#define mpn_mulmod_Bexpp1 __MPN(mulmod_Bexpp1)
+__GMP_DECLSPEC int mpn_mulmod_Bexpp1 __GMP_PROTO ((mp_ptr, mp_srcptr, mp_srcptr, mp_size_t, mp_ptr));
+
+#define mpn_mulmod_2expp1 __MPN(mulmod_2expp1_basecase)
+__GMP_DECLSPEC int mpn_mulmod_2expp1 __GMP_PROTO ((mp_ptr, mp_srcptr, mp_srcptr,int,mpir_ui, mp_ptr));
 
 #define mpn_mulmod_2expm1 __MPN(mulmod_2expm1)
-__GMP_DECLSPEC void mpn_mulmod_2expm1 __GMP_PROTO ((mp_ptr, mp_ptr, mp_ptr,unsigned long, mp_ptr));
+__GMP_DECLSPEC void mpn_mulmod_2expm1 __GMP_PROTO ((mp_ptr, mp_ptr, mp_ptr, mpir_ui, mp_ptr));
 
 #define mpn_cmp __MPN(cmp)
 #if __GMP_INLINE_PROTOTYPES || defined (__GMP_FORCE_mpn_cmp)
 __GMP_DECLSPEC int mpn_cmp __GMP_PROTO ((mp_srcptr, mp_srcptr, mp_size_t)) __GMP_NOTHROW __GMP_ATTRIBUTE_PURE;
 #endif
+
+#define mpn_redc_1 __MPN(redc_1)
+__GMP_DECLSPEC void mpn_redc_1 __GMP_PROTO ((mp_ptr, mp_ptr, mp_srcptr, mp_size_t, mp_limb_t);)
+
+#define mpn_redc_2 __MPN(redc_2)
+__GMP_DECLSPEC void mpn_redc_2 __GMP_PROTO ((mp_ptr, mp_ptr, mp_srcptr, mp_size_t, mp_srcptr));
+#define mpn_redc_n __MPN(redc_n)
+__GMP_DECLSPEC void mpn_redc_n __GMP_PROTO ((mp_ptr, mp_ptr, mp_srcptr, mp_size_t, mp_srcptr));
 
 #define mpn_divexact_by3(dst,src,size) \
   mpn_divexact_by3c (dst, src, size, __GMP_CAST (mp_limb_t, 0))
@@ -1580,10 +1658,6 @@ __GMP_DECLSPEC void mpn_invert __GMP_PROTO ((mp_ptr xp, mp_srcptr ap, mp_size_t 
 __GMP_DECLSPEC mp_limb_t mpn_sb_divappr_q __GMP_PROTO ((mp_ptr qp, mp_ptr np, mp_size_t nn,
 		  mp_srcptr dp, mp_size_t dn, mp_limb_t dip)); 
 
-#define mpn_dc_divappr_q_n __MPN(dc_divappr_q_n)
-__GMP_DECLSPEC mp_limb_t mpn_dc_divappr_q_n __GMP_PROTO ((mp_ptr qp, mp_ptr np, mp_srcptr dp, mp_size_t n, 
-		         mp_limb_t dip, mp_ptr tp));
-
 #define mpn_dc_bdiv_q_n __MPN(dc_bdiv_q_n)
 __GMP_DECLSPEC void mpn_dc_bdiv_q_n __GMP_PROTO ((mp_ptr qp, mp_ptr wp, mp_ptr np, mp_srcptr dp, mp_size_t n,
                  mp_limb_t dinv, mp_ptr scratch));
@@ -1593,8 +1667,8 @@ __GMP_DECLSPEC mp_limb_t mpn_inv_divappr_q_n __GMP_PROTO ((mp_ptr qp, mp_ptr np,
                          mp_srcptr dip));
 
 #define mpn_dc_divappr_q __MPN(dc_divappr_q)
-__GMP_DECLSPEC mp_limb_t mpn_dc_divappr_q __GMP_PROTO ((mp_ptr qp, mp_ptr np, mp_size_t nn, mp_srcptr dp, mp_size_t n,
-                 mp_limb_t dinv));
+__GMP_DECLSPEC mp_limb_t mpn_dc_divappr_q __GMP_PROTO ((mp_ptr qp, mp_ptr np, mp_size_t nn, mp_srcptr dp, 
+                 mp_size_t n, mp_limb_t dinv));
 
 #define mpn_dc_div_q __MPN(dc_div_q)
 __GMP_DECLSPEC mp_limb_t mpn_dc_div_q __GMP_PROTO ((mp_ptr qp, mp_ptr np, mp_size_t nn,
@@ -1666,6 +1740,9 @@ __GMP_DECLSPEC mp_size_t mpn_gcd __GMP_PROTO ((mp_ptr, mp_ptr, mp_size_t, mp_ptr
 #define mpn_gcd_1 __MPN(gcd_1)
 __GMP_DECLSPEC mp_limb_t mpn_gcd_1 __GMP_PROTO ((mp_srcptr, mp_size_t, mp_limb_t)) __GMP_ATTRIBUTE_PURE;
 
+#define mpn_gcdext_1 __MPN(gcdext_1)
+__GMP_DECLSPEC mp_limb_t mpn_gcdext_1 __GMP_PROTO ((mp_limb_signed_t *, mp_limb_signed_t *, mp_limb_t, mp_limb_t));
+
 #define mpn_gcdext __MPN(gcdext)
 __GMP_DECLSPEC mp_size_t mpn_gcdext __GMP_PROTO ((mp_ptr, mp_ptr, mp_size_t *, mp_ptr, mp_size_t, mp_ptr, mp_size_t));
 
@@ -1721,7 +1798,7 @@ __GMP_DECLSPEC void mpn_random __GMP_PROTO ((mp_ptr, mp_size_t));
 __GMP_DECLSPEC void mpn_random2 __GMP_PROTO ((mp_ptr, mp_size_t));
 
 #define mpn_urandomb __MPN(urandomb)
-__GMP_DECLSPEC void mpn_urandomb __GMP_PROTO ((mp_ptr, gmp_randstate_t, unsigned long));
+__GMP_DECLSPEC void mpn_urandomb __GMP_PROTO ((mp_ptr, gmp_randstate_t, mpir_ui));
 
 #define mpn_urandomm __MPN(urandomm)
 __GMP_DECLSPEC void mpn_urandomm __GMP_PROTO ((mp_ptr, gmp_randstate_t, mp_srcptr, mp_size_t));
@@ -1790,6 +1867,19 @@ __GMP_DECLSPEC void mpn_copyd __GMP_PROTO ((mp_ptr, mp_srcptr, mp_size_t));
 #define mpn_zero __MPN(zero)
 __GMP_DECLSPEC void mpn_zero __GMP_PROTO ((mp_ptr, mp_size_t));
 
+#ifndef mpn_sumdiff_n  /* if not done with cpuvec in a fat binary of in gmp-impl.h*/
+#define mpn_sumdiff_n __MPN(sumdiff_n)
+__GMP_DECLSPEC mp_limb_t mpn_sumdiff_n __GMP_PROTO ((mp_ptr, mp_ptr, mp_srcptr, mp_srcptr, mp_size_t));
+#endif
+
+/**************** MPN API for FFT ****************/
+
+#define mpn_mul_fft_main __MPN(mul_fft_main)
+__GMP_DECLSPEC void mpn_mul_fft_main __GMP_PROTO ((mp_ptr r1, mp_srcptr i1, mp_size_t n1, mp_srcptr i2, mp_size_t n2));
+
+#define mpn_mul_fft __MPN(mul_fft)
+__GMP_DECLSPEC int mpn_mul_fft __GMP_PROTO((mp_ptr rp, mp_size_t rn, mp_srcptr ap, mp_size_t an, mp_srcptr bp, mp_size_t bn, int k));
+
 /**************** mpz inlines ****************/
 
 /* The following are provided as inlines where possible, but always exist as
@@ -1840,6 +1930,17 @@ mpz_fits_uint_p (mpz_srcptr __gmp_z) __GMP_NOTHROW
 }
 #endif
 
+#if defined (__GMP_EXTERN_INLINE) || defined (__GMP_FORCE_mpz_fits_ui_p)
+#if ! defined (__GMP_FORCE_mpz_fits_ui_p)
+__GMP_EXTERN_INLINE
+#endif
+int
+mpz_fits_ui_p (mpz_srcptr __gmp_z) __GMP_NOTHROW
+{
+  __GMPZ_FITS_UTYPE_P (__gmp_z, GMP_UI_MAX);
+}
+#endif
+
 #if defined (__GMP_EXTERN_INLINE) || defined (__GMP_FORCE_mpz_fits_ulong_p)
 #if ! defined (__GMP_FORCE_mpz_fits_ulong_p)
 __GMP_EXTERN_INLINE
@@ -1866,7 +1967,7 @@ mpz_fits_ushort_p (mpz_srcptr __gmp_z) __GMP_NOTHROW
 #if ! defined (__GMP_FORCE_mpz_get_ui)
 __GMP_EXTERN_INLINE
 #endif
-unsigned long
+mpir_ui
 mpz_get_ui (mpz_srcptr __gmp_z) __GMP_NOTHROW
 {
   mp_ptr __gmp_p = __gmp_z->_mp_d;
@@ -1878,14 +1979,14 @@ mpz_get_ui (mpz_srcptr __gmp_z) __GMP_NOTHROW
      "__GMP_ULONG_MAX < GMP_NUMB_MASK".  */
 #if GMP_NAIL_BITS == 0 || defined (_LONG_LONG_LIMB)
   /* limb==long and no nails, or limb==longlong, one limb is enough */
-  return (__gmp_n != 0 ? __gmp_l : 0);
+  return (mpir_ui)(__gmp_n != 0 ? __gmp_l : 0);
 #else
   /* limb==long and nails, need two limbs when available */
   __gmp_n = __GMP_ABS (__gmp_n);
   if (__gmp_n <= 1)
-    return (__gmp_n != 0 ? __gmp_l : 0);
+    return (mpir_ui)(__gmp_n != 0 ? __gmp_l : 0);
   else
-    return __gmp_l + (__gmp_p[1] << GMP_NUMB_BITS);
+    return (mpir_ui)(__gmp_l + (__gmp_p[1] << GMP_NUMB_BITS));
 #endif
 }
 #endif
@@ -1943,7 +2044,7 @@ mpz_popcount (mpz_srcptr __gmp_u) __GMP_NOTHROW
   mp_bitcnt_t    __gmp_result;
 
   __gmp_usize = __gmp_u->_mp_size;
-  __gmp_result = (__gmp_usize < 0 ? __GMP_ULONG_MAX : 0);
+  __gmp_result = (__gmp_usize < 0 ? __GMP_BITCNT_MAX : 0);
   if (__GMP_LIKELY (__gmp_usize > 0))
     __gmp_result =  mpn_popcount (__gmp_u->_mp_d, __gmp_usize);
   return __gmp_result;
@@ -2212,7 +2313,6 @@ mpq_neg (mpq_ptr __gmp_w, mpq_srcptr __gmp_u)
     /* ASSERT ((start) >= 0); */                                \
     /* ASSERT ((start) <= (size)); */                           \
     /* ASSERT (MPN_SAME_OR_SEPARATE_P (dst, src, size)); */     \
-    __GMP_CRAY_Pragma ("_CRI ivdep");                           \
     for (__gmp_j = (start); __gmp_j < (size); __gmp_j++)        \
       (dst)[__gmp_j] = (src)[__gmp_j];                          \
   } while (0)
@@ -2378,19 +2478,23 @@ enum
 
 /* Major version number is the value of __GNU_MP__ too, above and in mp.h. */
 #define __GNU_MP_VERSION 5 
-#define __GNU_MP_VERSION_MINOR 0 
-#define __GNU_MP_VERSION_PATCHLEVEL 1
-#define GMP_VERSION "5.0.1"
+#define __GNU_MP_VERSION_MINOR 1 
+#define __GNU_MP_VERSION_PATCHLEVEL 3
+#define GMP_VERSION "5.1.3"
+#define __GNU_MP_RELEASE (__GNU_MP_VERSION * 10000 + __GNU_MP_VERSION_MINOR * 100 + __GNU_MP_VERSION_PATCHLEVEL)
 
 #define __MPIR_VERSION 2
-#define __MPIR_VERSION_MINOR 1
-#define __MPIR_VERSION_PATCHLEVEL 1
+#define __MPIR_VERSION_MINOR 7 
+#define __MPIR_VERSION_PATCHLEVEL 2 
 #if defined( _MSC_VER )
-#define _MSC_MPIR_VERSION "2.1.1"
+#define _MSC_MPIR_VERSION "2.7.2"
 #endif
+#define __MPIR_RELEASE (__MPIR_VERSION * 10000 + __MPIR_VERSION_MINOR * 100 + __MPIR_VERSION_PATCHLEVEL)
 
 /* These are for programs like MPFR to use the same CC and CFLAGS as MPIR */
 
+#if ! defined (__GMP_WITHIN_CONFIGURE)
+#endif
 
 #define __GMP_H__
 #endif /* __GMP_H__ */

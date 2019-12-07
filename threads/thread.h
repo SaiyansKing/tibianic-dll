@@ -6,12 +6,12 @@
 
 class Thread {
 	public:
-		Thread(WINAPI DWORD (*f)(void* p), LPVOID argv, bool execute = true);
+		Thread(DWORD (WINAPI *f)(void* p), LPVOID argv, bool execute = true);
 		
 		bool start();
 		bool isRunning();
 	private:
-		DWORD WINAPI (*m_callback)(void* arg);
+		DWORD (WINAPI *m_callback)(void* arg);
 		LPVOID m_argument;
 		
 		bool m_executed;

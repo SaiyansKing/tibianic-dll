@@ -28,12 +28,12 @@ bool MemoBox::onKeyboardEvent(KeyboardEvent_t event, keyboardstate_t state, int 
 	if(event == EVENT_KEY_DOWN){
 		switch(state){
 			case KEYBOARD_STATE_UP: {
-				getControl<Scroll>(CONTROL_1_LOCATION)->setPosition(std::max(0, getControl<Scroll>(CONTROL_1_LOCATION)->getPosition() - 1));
+				getControl<Scroll>(CONTROL_1_LOCATION)->setPosition(std::max<int>(0, getControl<Scroll>(CONTROL_1_LOCATION)->getPosition() - 1));
 				return true;
 			}
 			
 			case KEYBOARD_STATE_DOWN: {
-				getControl<Scroll>(CONTROL_1_LOCATION)->setPosition(std::min((int)m_lines.size() - 1, getControl<Scroll>(CONTROL_1_LOCATION)->getPosition() + 1));	
+				getControl<Scroll>(CONTROL_1_LOCATION)->setPosition(std::min<int>((int)m_lines.size() - 1, getControl<Scroll>(CONTROL_1_LOCATION)->getPosition() + 1));	
 				return true;
 			}
 			
@@ -48,13 +48,13 @@ bool MemoBox::onKeyboardEvent(KeyboardEvent_t event, keyboardstate_t state, int 
 void MemoBox::setText(std::string text){
 	m_lines = wrapTextLines(1, text, m_width - 25);
 	
-	int hiddenLines = std::max(0, (int)m_lines.size() - m_visibleLines);
+	int hiddenLines = std::max<int>(0, (int)m_lines.size() - m_visibleLines);
 	
 	getControl<Scroll>(CONTROL_1_LOCATION)->setMax(hiddenLines);
 	getControl<Scroll>(CONTROL_1_LOCATION)->setPosition(0);
 	
 	if(hiddenLines){
-		getControl<Scroll>(CONTROL_1_LOCATION)->setSize(std::max(0.2, (double)m_visibleLines / (double)(hiddenLines + m_visibleLines)));
+		getControl<Scroll>(CONTROL_1_LOCATION)->setSize(std::max<double>(0.2, (double)m_visibleLines / (double)(hiddenLines + m_visibleLines)));
 	} else {
 		getControl<Scroll>(CONTROL_1_LOCATION)->setSize(1.0);
 	}
@@ -68,7 +68,7 @@ void MemoBox::draw(int nSurface){
 	Painter::drawBorders(nSurface, absolute->x - 1, absolute->y - 1, m_width + 2, m_visibleLines * MEMOBOX_FONT_HEIGHT + 1);
 	
 	for(int i = getControl<Scroll>(CONTROL_1_LOCATION)->getPosition(), j = 0; i != getControl<Scroll>(CONTROL_1_LOCATION)->getPosition() + m_visibleLines; ++i, ++j){
-		if(i >= m_lines.size()){
+		if(i >= static_cast<int>(m_lines.size())){
 			break;
 		}
 

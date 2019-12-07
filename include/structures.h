@@ -15,7 +15,7 @@ struct OutfitMasks_t {
 	uint32_t body;
 	uint32_t legs;
 	uint32_t feet;
-};//__attribute__((packed));
+};
 
 struct Outfit_t {
 	Outfit_t(){
@@ -24,7 +24,7 @@ struct Outfit_t {
 	
 	uint32_t type;
 	OutfitMasks_t masks;
-};//__attribute__((packed));
+};
 
 struct Creature_t {
 	uint32_t id;
@@ -66,23 +66,23 @@ struct Creature_t {
 	uint32_t party;
 	
 	uint32_t u12;
-};//__attribute__((packed));
+};
 
 struct Object_t {
 	uint32_t objectId;
 	uint32_t objectData;
 	uint32_t objectDataEx;
-};//__attribute__((packed));
+};
 
 struct Tile_t {
 	uint32_t amount;
 	Object_t objects[14];
-};//__attribute__((packed));
+};
 
 struct Map_t {
 	//Tile_t tiles[2016];
 	Tile_t tiles[18][14][8];
-};//__attribute__((packed));
+};
 
 struct Container_t {
 	uint32_t isAvailable;
@@ -94,7 +94,7 @@ struct Container_t {
 	uint32_t hasparent;
 	uint32_t amount;
 	Object_t objects[36];
-};//__attribute__((packed));
+};
 
 struct Vip_t {
 	uint32_t guid;
@@ -103,20 +103,20 @@ struct Vip_t {
 	
 	uint32_t u1;
 	uint16_t u2;
-};//__attribute__((packed));
+};
 
 struct Viplist_t {
 	Vip_t list[100];
-};//__attribute__((packed));
+};
 
 struct Battlelist_t {
 	Creature_t creatures[150];
-};//__attribute__((packed));
+};
 
 struct Point_t {
 	uint32_t x;
 	uint32_t y;
-};//__attribute__((packed));
+};
 
 struct Color_t {
 	Color_t(uint8_t _red, uint8_t _green, uint8_t _blue){
@@ -134,7 +134,7 @@ struct Color_t {
 	uint8_t red;
 	uint8_t green;
 	uint8_t blue;
-};//__attribute__((packed));
+};
 
 struct Color {
 	uint8_t red;
@@ -154,26 +154,26 @@ struct Color {
 	}
 	
 	Color(float r, float g, float b, float a = 1.0f){
-		red = r * 255.0f;
-		green = g * 255.0f;
-		blue = b * 255.0f;
-		alpha = a * 255.0f;
+		red = static_cast<uint8_t>(r * 255.0f);
+		green = static_cast<uint8_t>(g * 255.0f);
+		blue = static_cast<uint8_t>(b * 255.0f);
+		alpha = static_cast<uint8_t>(a * 255.0f);
 	}
 
 	const float rF() const {
-		return (float)red / 255.0f;
+		return red / 255.0f;
 	}
 
 	const float gF() const {
-		return (float)green / 255.0f;
+		return green / 255.0f;
 	}
 
 	const float bF() const {
-		return (float)blue / 255.0f;
+		return blue / 255.0f;
 	}
 
 	const float aF() const {
-		return (float)alpha / 255.0f;
+		return alpha / 255.0f;
 	}
 	
 	const uint32_t argb() const {
@@ -209,6 +209,6 @@ struct Label_t {
 	uint32_t green;
 	uint32_t blue;
 	uint32_t align;
-};//__attribute__((packed));
+};
 
 #endif

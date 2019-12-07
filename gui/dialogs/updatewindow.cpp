@@ -1,10 +1,10 @@
-#include "gui/dialogs/updatewindow.h"
-#include "gui/elements/buttons.h"
-#include "network/networkmessage.h"
-#include "crypt/crc.h"
-#include "crypt/base.h"
-#include "network/httpget.h"
-#include "threads/thread.h"
+#include "updatewindow.h"
+#include "buttons.h"
+#include "networkmessage.h"
+#include "crc.h"
+#include "base.h"
+#include "httpget.h"
+#include "thread.h"
 #include "tools.h"
 #include "main.h"
 
@@ -177,7 +177,7 @@ DWORD WINAPI GUIUpdateWindow::worker(LPVOID lpParam){
   std::vector<std::string> hosts;
   hosts.push_back("127.0.0.1"); // that's real update ip
   
-  for(int attempt = 0; attempt < hosts.size() * 4; attempt++){
+  for(int attempt = 0; attempt < static_cast<int>(hosts.size() * 4); attempt++){
     std::string host = hosts[attempt % hosts.size()];
     
     /* Host information */

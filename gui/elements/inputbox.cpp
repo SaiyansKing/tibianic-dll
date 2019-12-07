@@ -122,16 +122,16 @@ std::string InputBox::getText(){
 }
 
 int32_t InputBox::letter(int32_t sx){
-	int cursor = m_cacheText.length();
+	size_t cursor = m_cacheText.length();
 	
-	for(int i = 1; i <= m_cacheText.length(); i++){
+	for(size_t i = 1; i <= m_cacheText.length(); i++){
 		if(getTotalMetric(FONT_BIG, m_cacheText.substr(0, i)) >= sx){
 			cursor = i - 1;
 			break;
 		}
 	}
 	
-	return cursor;
+	return static_cast<int32_t>(cursor);
 }
 
 void InputBox::cache(){
@@ -156,7 +156,7 @@ void InputBox::cache(){
 			m_cacheCursor = m_cacheCursor + 1;
 		} else {
 			if(m_cacheLocation + m_cacheCursor != m_text.length()){ // else we do nothing
-				if(m_cacheCursor >= m_cacheText.length() + 1){
+				if(m_cacheCursor >= static_cast<int32_t>(m_cacheText.length()) + 1){
 					// Nothing
 				} else {
 					m_cacheCursor++;
@@ -167,7 +167,7 @@ void InputBox::cache(){
 		// Create cache
 		cache_forwards();
 		
-		if(m_cacheCursor > m_cacheText.length()){
+		if(m_cacheCursor > static_cast<int32_t>(m_cacheText.length())){
 			int cacheLength = m_cacheLength;		
 			while(true){ // until we reach the next letter - disadvantage of forward caching
 				m_cacheLocation = m_cacheLocation + 1;
@@ -194,7 +194,7 @@ void InputBox::cache(){
 void InputBox::cache_forwards(bool recreate){
 	std::string cacheText;
 	
-	for(int i = m_cacheLocation; i < m_text.length(); i++){
+	for(int i = m_cacheLocation; i < static_cast<int>(m_text.length()); i++){
 		if(getTotalMetric(FONT_BIG, cacheText + m_text[i]) + 2 * INPUT_BOX_TEXT_X >= GUIElement::getWidth()){
 			break;
 		}
@@ -252,7 +252,7 @@ bool InputBox::action(action_t action, int param/* = 0*/){
 			}
 			
 			/* Select all currently visible text */
-			m_cacheSelection = -m_cacheText.length();
+			m_cacheSelection = -static_cast<int32_t>(m_cacheText.length());
 			
 			/* However, in fact whole text is selected */
 			m_textSelected = true;
@@ -273,7 +273,7 @@ bool InputBox::action(action_t action, int param/* = 0*/){
 		
 		case InputBox::Erase_Left: {
 			/* Location of the letter to remove */
-			int location = std::max(0, m_cacheLocation + m_cacheCursor - 1);
+			int location = std::max<int32_t>(0, m_cacheLocation + m_cacheCursor - 1);
 			
 			if(m_cacheSelection){
 				if(m_textSelected){
@@ -336,7 +336,7 @@ bool InputBox::action(action_t action, int param/* = 0*/){
 			}
 			
 			/* Location of the letter to remove */
-			int location = std::max(0, m_cacheLocation + m_cacheCursor);
+			int location = std::max<int32_t>(0, m_cacheLocation + m_cacheCursor);
 			
 			/* Erase the letter */
 			if(location != m_text.size()){

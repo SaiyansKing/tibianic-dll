@@ -196,4 +196,5 @@ DWORD WINAPI Pinger::ping(LPVOID lpParam){
 		
 		Sleep(PING_WAIT);
 	}
+	return 0;
 }

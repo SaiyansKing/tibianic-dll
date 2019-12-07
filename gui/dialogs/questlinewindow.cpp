@@ -23,7 +23,7 @@ GUIQuestLine::GUIQuestLine() : GUIWindow("Quest Information", 0, 0, 300, 328){
 	GUIParent::getControl<MemoBox>(CONTROL_2_LOCATION)->setText("There is no mission selected.");
 	
 	/* Add listeners */
-	GUIParent::getControl<ListBox>(CONTROL_1_LOCATION)->addListener(GUIElement::OnChange, boost::bind(&GUIQuestLine::selectMission, this, _1));
+	GUIParent::getControl<ListBox>(CONTROL_1_LOCATION)->addListener(GUIElement::OnChange, std::bind(&GUIQuestLine::selectMission, this, std::placeholders::_1));
 }
 
 void GUIQuestLine::setQuest(std::string quest){
@@ -51,7 +51,7 @@ void GUIQuestLine::setMissions(std::vector<std::string> missions, std::vector<st
 void GUIQuestLine::selectMission(GUIElement* caller){
 	int selection = GUIParent::getControl<ListBox>(CONTROL_1_LOCATION)->selection();
 	
-	if(m_descriptions.size() > selection){
+	if(static_cast<int>(m_descriptions.size()) > selection){
 		GUIParent::getControl<MemoBox>(CONTROL_2_LOCATION)->setText(m_descriptions[selection]);
 	} else {
 		GUIParent::getControl<MemoBox>(CONTROL_2_LOCATION)->setText("There is no mission selected.");

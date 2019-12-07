@@ -8,87 +8,15 @@ LIB g_dll;
 RSA* g_rsa;
 GUI* g_gui;
 
-// Last caller of the event function
-uint32_t g_lastCaller;
-
-// Stack related variables
-uint32_t g_lastEsp;
-uint32_t g_lastEbp;
-
-// Registers related variables
-uint32_t g_lastTmp;
-uint32_t g_lastEax;
-uint32_t g_lastEbx;
-uint32_t g_lastEcx;
-uint32_t g_lastEdx;
-uint32_t g_lastEsi;
-uint32_t g_lastEdi;
-
-// Event related variables
-int g_lastEventId;
-int g_lastPacketId;
-
 // Input related variables
 POINT g_lastMousePosition;
 bool g_lastAlt;
 bool g_lastControl;
 
-/* Asembler functions */
-extern "C" void _cdecl pushRegisters();
-asm("_pushRegisters:     \n\
-  .intel_syntax noprefix \n\
-  pop _g_lastTmp         \n\
-  push eax               \n\
-  push ebx               \n\
-  push ecx               \n\
-  push edx               \n\
-  push edi               \n\
-  push esi               \n\
-  push ebp               \n\
-  push esp               \n\
-  push _g_lastTmp        \n\
-  ret                    \n\
-  .att_syntax;           \n\
-");
-
-extern "C" void _cdecl popRegisters();
-asm("_popRegisters:      \n\
-  .intel_syntax noprefix \n\
-  pop _g_lastTmp         \n\
-  pop esp                \n\
-  pop ebp                \n\
-  pop esi                \n\
-  pop edi                \n\
-  pop edx                \n\
-  pop ecx                \n\
-  pop ebx                \n\
-  pop eax                \n\
-  push _g_lastTmp        \n\
-  ret                    \n\
-  .att_syntax;           \n\
-");
-
 /* Global functions */
 
 LRESULT CALLBACK HookedMessageDispatcher(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
   ScopedCriticalSection section(7);
-  
-  // Save caller
-  /*
-  SAVE_STACK;
-  SAVE_REGISTERS;
-  asm(".intel_syntax noprefix       \n\
-      mov esp, dword ptr ss:[ebp]   \n\
-      pop ebp                       \n\
-      mov esp, dword ptr ss:[ebp]   \n\
-      pop ebp                       \n\
-      mov eax, dword ptr ss:[ebp+4] \n\
-      mov _g_lastCaller, eax        \n\
-      .att_syntax;                  \n\
-  ");
-  LOAD_REGISTERS;
-  LOAD_STACK;
-  */
   
   // Mouse common variables
   g_lastMousePosition.x = GET_X_LPARAM(lParam);
@@ -587,19 +515,6 @@ int APIENTRY HookedRecv(SOCKET s, char* buff, int len, int flags){
 void Render(int nSurface){
   // Local variables for any use
   static char messageBuffer[1024];
-  /*
-  // Sample skins
-  int start = 0;
-  for(int i = start; i <= start + 50; i++){
-    Painter::drawSkin(nSurface, 50 + (i - start) * 32, 150, 32, 32, i, 0, 0);
-    sprintf(messageBuffer, "%d", i);
-    Painter::drawText(nSurface, 50 + (i - start) * 32, 150, FONT_NORMAL_OUTLINED, 255, 255, 255, messageBuffer, 0);
-  }
-  // girder = 10, 41, 147 can be used
-  */
-  
-  //sprintf(messageBuffer, "caller = 0x%04x", g_lastCaller);
-  //Painter::drawText(nSurface, 40, 20, FONT_NORMAL_OUTLINED, 255, 255, 255, messageBuffer, 0);
   
   if(g_dll.m_gameMenu){
     static int height = 70;
@@ -688,7 +603,7 @@ void Render(int nSurface){
   g_gui->draw(nSurface);
 }
 
-void HookedTimer(){
+void __cdecl HookedTimer(){
   // Dispatch idle message to Tibia
   Tibia::Idle();
   
@@ -707,110 +622,51 @@ void HookedTimer(){
 }
 
 /* This function is a this call, ecx contains GUIItem */
-int _stdcall HookedGetIconSkin(int iconNumber){
-  SAVE_STACK;
-  SAVE_REGISTERS;
-  
+uint32_t __stdcall HookedGetIconSkin(int iconNumber){
   Creature_t* player = Tibia::GetCreatureEntry(Tibia::GetPlayerInfo(PLAYER_INFO_ID));
-  bool iconFound = false;
   
+  uint32_t currentIcon = 0;
   if(player->skull != SKULL_NONE){
     if(iconNumber == 0){
       switch(player->skull){
-        case SKULL_YELLOW: {
-          g_lastTmp = 0x0EC;
-          break;
-        }
-        
-        case SKULL_GREEN: {
-          g_lastTmp = 0x0ED;
-          break;
-        }        
-        
-        case SKULL_WHITE: {
-          //g_lastTmp = 0x0EE;
-          g_lastTmp = 0x0FA;
-          break;
-        }
-        
-        case SKULL_RED: {
-          //g_lastTmp = 0x0EF;
-          g_lastTmp = 0x0FB;
-          break;
-        }
+        case SKULL_YELLOW: currentIcon = 0x0EC; break;
+        case SKULL_GREEN: currentIcon = 0x0ED; break;
+        case SKULL_WHITE: currentIcon = 0x0EE; break;
+        case SKULL_RED: currentIcon = 0x0EF; break;
       }
       
-      iconFound = true;
+	  return currentIcon;
     } else {    
       iconNumber = iconNumber - 1;
     }
   }
   
-  for(uint32_t icon = 1; !iconFound && icon <= (1 << 30); icon <<= 1){
+  for(uint32_t icon = 1; icon <= (1 << 30); icon <<= 1){
     if((Tibia::GetPlayerInfo(PLAYER_INFO_ICONS) & icon) == icon){
       switch(icon){
-        case FLAG_POISON: {
-          g_lastTmp = 0x0E4;
-          break;
-        }
-          
-        case FLAG_FIRE: {
-          g_lastTmp = 0x0E5;
-          break;
-        }
-          
-        case FLAG_ENERGY: {
-          g_lastTmp = 0x0E6;
-          break;
-        }
-          
-        case FLAG_DRUNK: {
-          g_lastTmp = 0x0E7;
-          break;
-        }
-          
-        case FLAG_MANA_SHIELD: {
-          g_lastTmp = 0x0E8;
-          break;
-        }
-          
-        case FLAG_PARALYZE: {
-          g_lastTmp = 0x0E9;
-          break;
-        }
-          
-        case FLAG_HASTE: {
-          g_lastTmp = 0x0EA;
-          break;
-        }
-          
-        case FLAG_SWORDS: {
-          g_lastTmp = 0x0EB;
-          break;
-        }
-          
+        case FLAG_POISON: currentIcon = 0x0E4; break;
+        case FLAG_FIRE: currentIcon = 0x0E5; break;
+        case FLAG_ENERGY: currentIcon = 0x0E6; break;
+        case FLAG_DRUNK: currentIcon = 0x0E7; break;
+        case FLAG_MANA_SHIELD: currentIcon = 0x0E8; break;
+        case FLAG_PARALYZE: currentIcon = 0x0E9; break;
+        case FLAG_HASTE: currentIcon = 0x0EA; break;
+        case FLAG_SWORDS: currentIcon = 0x0EB; break;
         default: break;
       }
       
       if(iconNumber == 0){
-        iconFound = true;
-        break;
+        return currentIcon;
       }
       
       iconNumber = iconNumber - 1;
     }
   }
   
-  LOAD_REGISTERS;
-  LOAD_STACK;
-  
-  return g_lastTmp;
+  return currentIcon;
 }
 
-void HookedDrawCreatureName(int nSurface, int nX, int nY, int nFont, int nRed, int nGreen, int nBlue, char* lpText, int nAlign){
-  SAVE_STACK;
-  SAVE_REGISTERS;
-  
+void __cdecl HookedDrawCreatureName(int nSurface, int nX, int nY, int nFont, int nRed, int nGreen, int nBlue, char* lpText, int nAlign){
   // Buffer for various usage
   static char messageBuffer[1024];
   
@@ -821,16 +677,16 @@ void HookedDrawCreatureName(int nSurface, int nX, int nY, int nFont, int nRed, i
     
     // Calculate percentage of health and mana
     uint32_t healthPercent;
-    uint32_t manaPercent;  
+    uint32_t manaPercent;
     
     if(healthPercent = Tibia::GetPlayerInfo(PLAYER_INFO_MAX_HEALTH)){
-	  healthPercent = std::min((uint32_t)100, 1 + 100 * Tibia::GetPlayerInfo(PLAYER_INFO_HEALTH) / healthPercent);
+	  healthPercent = std::min<uint32_t>(100, 1 + 100 * Tibia::GetPlayerInfo(PLAYER_INFO_HEALTH) / healthPercent);
 	} else {
       healthPercent = 100;
     }
     
     if(manaPercent = Tibia::GetPlayerInfo(PLAYER_INFO_MAX_MANA)){
-      manaPercent = std::min((uint32_t)100, 1 + 100 * Tibia::GetPlayerInfo(PLAYER_INFO_MANA) / manaPercent);
+      manaPercent = std::min<uint32_t>(100, 1 + 100 * Tibia::GetPlayerInfo(PLAYER_INFO_MANA) / manaPercent);
     } else {
       manaPercent = 100;
     }
@@ -855,8 +711,8 @@ void HookedDrawCreatureName(int nSurface, int nX, int nY, int nFont, int nRed, i
     
     // Adjust colors according to lighting
     if(healthColor.green != nGreen || healthColor.blue != nBlue){
-      manaColor.green = std::max(0, manaColor.green - (healthColor.green - nGreen));
-      manaColor.blue = std::max(0, manaColor.blue - (healthColor.blue - nBlue));
+      manaColor.green = std::max<uint8_t>(0, manaColor.green - (healthColor.green - nGreen));
+      manaColor.blue = std::max<uint8_t>(0, manaColor.blue - (healthColor.blue - nBlue));
     }
     
     // Draw new health bar
@@ -869,16 +725,10 @@ void HookedDrawCreatureName(int nSurface, int nX, int nY, int nFont, int nRed, i
   } else {
     Painter::drawText(nSurface, nX, nY, nFont, nRed, nGreen, nBlue, lpText, nAlign);
   }
-  
-  LOAD_REGISTERS;
-  LOAD_STACK;
 }
 
-void HookedParsePacketSwitch(){
-  SAVE_STACK;
-  SAVE_REGISTERS;
-  
-  switch(g_lastEcx){
+void __fastcall HookedParsePacketSwitch(int _ECX){
+  switch(_ECX){
     /* Quest log */
     case 0xF0: {
       int amount = Tibia::NetworkGetU16();
@@ -921,7 +771,7 @@ void HookedParsePacketSwitch(){
         descriptions.push_back(missionDescription);
       }
       
-      g_dll.m_questDialog->setMissions(missions, descriptions);;
+      g_dll.m_questDialog->setMissions(missions, descriptions);
       
       g_gui->setDialog(g_dll.m_questDialog);
       break;
@@ -961,7 +811,7 @@ void HookedParsePacketSwitch(){
         list.push_back(std::pair<uint32_t, std::string>(lookType, name));
       }
       
-      g_dll.m_outfitDialog->setOutfits(list);    
+      g_dll.m_outfitDialog->setOutfits(list);
       g_dll.m_outfitDialog->setOutfit(defaultOutfit);
       
       g_gui->setDialog(g_dll.m_outfitDialog);
@@ -970,89 +820,48 @@ void HookedParsePacketSwitch(){
     
     default: {
       char error[64];
-      sprintf(error, "Unknown packet received (%02X)", g_lastEcx);
+      sprintf(error, "Unknown packet received (%02X)", static_cast<uint32_t>(_ECX));
       Tibia::FatalError((const char*)error);
     }
   }
-  
-  LOAD_REGISTERS;
-  LOAD_STACK;
 }
 
-void _stdcall HookedAddSetOutfitContextMenu(int id, char* text, char* hint){
-  SAVE_STACK;
-  SAVE_REGISTERS;
-  
+void __fastcall HookedAddSetOutfitContextMenu(uint32_t _THIS, uint32_t _EDX, uint32_t id, const char* text, const char* shortcut){
   /* Replace set outfit event with our own */
-  Tibia::AddContextMenu(0x1001, text, hint);
-  
+  Tibia::AddContextMenu(_THIS, 0x1001, text, shortcut);
+
   /* Shared experience */
   const char* _enableShared = "Enable Shared Experience";
   const char* _disableShared = "Disable Shared Experience";
-  
+
   Creature_t* player = Tibia::GetCreatureEntry(Tibia::GetPlayerInfo(PLAYER_INFO_ID));
   if(player->party == PARTY_LEADER){
-    LOAD_ESI;
-    MOV(ECX, ESI);
     if(g_dll.m_sharedExperience){
-      Tibia::AddContextMenu(0x1000, _disableShared, NULL);
+      Tibia::AddContextMenu(_THIS, 0x1000, _disableShared, NULL);
     } else {
-      Tibia::AddContextMenu(0x1000, _enableShared, NULL);
+      Tibia::AddContextMenu(_THIS, 0x1000, _enableShared, NULL);
     }
   }
-  
-  LOAD_REGISTERS;
-  LOAD_STACK;
 }
 
-extern "C" void _cdecl contextEvent(uint32_t eventId){
-  switch(eventId){
-    case 0x1000: {
-      return g_dll.RequestSharedExperience();
-    }
+void __fastcall HookedSetOutfitContextMenu(uint32_t _THIS, uint32_t _EDX, uint32_t eventId){
+  if(eventId >= 0x1000 && eventId <= 0x1500){
+    switch(eventId) {
+      case 0x1000: {
+        return g_dll.RequestSharedExperience();
+      }
     
-    case 0x1001: {
-      return g_dll.RequestOutfitDialog();
-    }
+      case 0x1001: {
+        return g_dll.RequestOutfitDialog();
+      }
+	}
+	return;
   }
+  reinterpret_cast<void(__fastcall *)(uint32_t, uint32_t, uint32_t)>(0x43F3A0)(_THIS, _EDX, eventId);
 }
-
-/* 
-  Original asembler code:  
-  004A0F36  |. 51             PUSH ECX
-  004A0F37  |. 8BC8           MOV ECX,EAX
-  004A0F39  |. FF52 70        CALL DWORD PTR DS:[EDX+70]
-
-  Replaced with:
-  004A0F36  |. E8 4303EA68    CALL _HookedOnPushEvent
-*/
-
-extern "C" void HookedOnPushEvent();
-asm("_HookedOnPushEvent:      \n\
-  .intel_syntax noprefix      \n\
-  CMP ECX, 0x1000              \n\
-  JL default                  \n\
-  CMP ECX, 0x1500              \n\
-  JG  default                  \n\
-  CALL _pushRegisters          \n\
-  PUSH ECX                    \n\
-  CALL _contextEvent          \n\
-  ADD ESP, 4                  \n\
-  CALL _popRegisters          \n\
-  MOV EAX, 0                  \n\
-  JMP return                  \n\
-  default:                    \n\
-  PUSH ECX                    \n\
-  MOV ECX, EAX                \n\
-  CALL DWORD PTR DS:[EDX+0x70]\n\
-  return:                      \n\
-  RET                          \n\
-  .att_syntax;                \n\
-");
 
 /* Called only when equipment window is minimized */
-
-extern "C" void _stdcall MinimizeInventory(){
+void __fastcall HookedMinInventory(uint32_t _THIS, uint32_t _EDX, uint32_t a1, uint32_t a2){
   // Inventory is not visible
   g_dll.m_inventory = false;
   
@@ -1061,48 +870,25 @@ extern "C" void _stdcall MinimizeInventory(){
   
   // Enable arrow slot
   g_dll.m_arrowSlot->activate();
+
+  reinterpret_cast<void(__fastcall *)(uint32_t, uint32_t, uint32_t, uint32_t)>(0x42B4D0)(_THIS, _EDX, a1, a2);
 }
 
-extern "C" void HookedMinInventory();
-asm("_HookedMinInventory:      \n\
-  .intel_syntax noprefix      \n\
-  POP _g_lastTmp              \n\
-  CALL _MinimizeInventory@0    \n\
-  MOV EAX, 0x0042B4D0          \n\
-  CALL EAX                    \n\
-  PUSH _g_lastTmp              \n\
-  RET                          \n\
-  .att_syntax;                \n\
-");
-
 /* Called only when equipment window is maximized */
-extern "C" void _stdcall MaximizeInventory(){
+void __fastcall HookedMaxInventory(uint32_t _THIS, uint32_t _EDX, uint32_t a1, uint32_t a2){
   // Inventory is visible
   g_dll.m_inventory = true;
   
-  // Enable inventory buttons  
+  // Enable inventory buttons
   g_dll.m_inventoryButtons->enable();
   
   // Disable arrow slot
   g_dll.m_arrowSlot->deactivate();
+
+  reinterpret_cast<void(__fastcall *)(uint32_t, uint32_t, uint32_t, uint32_t)>(0x49BEE0)(_THIS, _EDX, a1, a2);
 }
 
-extern "C" void HookedMaxInventory();
-asm("_HookedMaxInventory:      \n\
-  .intel_syntax noprefix      \n\
-  POP _g_lastTmp              \n\
-  CALL _MaximizeInventory@0    \n\
-  MOV EAX, 0x0049BEE0          \n\
-  CALL EAX                    \n\
-  PUSH _g_lastTmp              \n\
-  RET                          \n\
-  .att_syntax;                \n\
-");
-
-void HookedPrintCapacity(int nSurface, int nX, int nY, int nFont, int nRed, int nGreen, int nBlue, int nAlign, char* lpText){
-  SAVE_STACK;
-  SAVE_REGISTERS;
-  
+void __cdecl HookedPrintCapacity(int nSurface, int nX, int nY, int nFont, int nRed, int nGreen, int nBlue, int nAlign, char* lpText){
   // Normal function
   Painter::drawText(nSurface, nX, nY, nFont, nRed, nGreen, nBlue, lpText, nAlign);
   
@@ -1117,27 +903,18 @@ void HookedPrintCapacity(int nSurface, int nX, int nY, int nFont, int nRed, int 
     slot->setPosition(nX + 89, nY - 7);
     slot->draw(nSurface);
   }
-  
-  LOAD_STACK;
-  LOAD_REGISTERS;
 }
 
-void HookedPrintFps(int nSurface, int nX, int nY, int nFont, int nRed, int nGreen, int nBlue, char* lpText, int nAlign){
-  SAVE_STACK;
-  SAVE_REGISTERS;
-  
+void __cdecl HookedPrintFps(int nSurface, int nX, int nY, int nFont, int nRed, int nGreen, int nBlue, char* lpText, int nAlign){
   if(g_dll.m_gameFps){
     Painter::drawText(nSurface, nX, nY, nFont, nRed, nGreen, nBlue, lpText, nAlign);
   }
   
   Render(nSurface);
-  
-  LOAD_STACK;
-  LOAD_REGISTERS;
 }
 
 /* We have some variables on the stack so we need the function to clean it up */
-/*_stdcall */void HookedPing(){
+void __cdecl HookedPing(){
   // Update experience text
   g_dll.SetExperienceText(g_dll.m_displayExperience, *(uint32_t*)PLAYER_EXP_ADDRESS);
   
@@ -1160,7 +937,7 @@ void HookedPrintFps(int nSurface, int nX, int nY, int nFont, int nRed, int nGree
 }
 
 /* In this case we are creating a variable on the stack so it needs to be cleaned later on */
-/*_cdecl */void _stdcall HookedSetExperience(int Experience, int Level, int U3){
+void __cdecl HookedSetExperience(int Experience, int Level, int U3){
   Tibia::SetExperience(Experience, Level, U3);
   
   if(!g_dll.m_firstExperience){
@@ -1175,7 +952,7 @@ void HookedPrintFps(int nSurface, int nX, int nY, int nFont, int nRed, int nGree
   }
 }
 
-/*_cdecl */void _stdcall HookedPushLetter(int Letter){
+void __cdecl HookedPushLetter(int Letter){
   if(Tibia::IsOnline()){
     if(g_dll.m_wsad){
       if(Letter == 'A' || Letter == 'a'){
@@ -1856,7 +1633,7 @@ void LIB::SetExperienceText(bool Display, uint32_t Experience /*= 0*/){
       SetWindowText(m_hWnd, (WINDOW_TITLE));
     }
   } else {
-    uint32_t experiencePerMinute = (float)(Experience - m_beginExperience) / (float)((GetTickCount() - m_beginExpTime) / 1000.0f / 60.0f);
+    uint32_t experiencePerMinute = static_cast<uint32_t>((float)(Experience - m_beginExperience) / (float)((GetTickCount() - m_beginExpTime) / 1000.0f / 60.0f));
     
     std::stringstream m_title;
     m_title << WINDOW_TITLE << " - You are now gaining " << (experiencePerMinute * 60) << " experience points per hour";
@@ -1873,13 +1650,13 @@ DWORD LIB::HookAsmCall(DWORD dwAddress, DWORD dwFunction, DWORD NOPs /* = 0 */){
   VirtualProtectEx(proc, (LPVOID)(dwAddress), 5 + NOPs, PAGE_READWRITE, &dwOldProtect);
   
   dwNewCall = dwFunction - dwAddress - 5;
-  dwOldCall = *(uint32_t*)(dwAddress + 1);  
+  dwOldCall = *(uint32_t*)(dwAddress + 1);
   
   *(uint8_t*)(dwAddress) = 0xE8;
   *(uint32_t*)(dwAddress + 1) = dwNewCall;
   // 0xE8 AABBCCDD - asm CALL func
   
-  for(int i = 0; i < NOPs; i++){
+  for(DWORD i = 0; i < NOPs; i++){
     *(uint8_t*)(dwAddress + 5 + i) = 0x90; // NOP
   }
   
@@ -1888,13 +1665,27 @@ DWORD LIB::HookAsmCall(DWORD dwAddress, DWORD dwFunction, DWORD NOPs /* = 0 */){
   return dwOldCall;
 }
 
+void LIB::HookAsmJmp(DWORD dwAddress, DWORD dwFunction){
+  DWORD dwOldProtect, dwNewProtect, dwNewCall;
+  HANDLE proc = GetCurrentProcess();
+  
+  VirtualProtectEx(proc, (LPVOID)(dwAddress), 5, PAGE_READWRITE, &dwOldProtect);
+  
+  dwNewCall = dwFunction - dwAddress - 5;
+  
+  *(uint8_t*)(dwAddress) = 0xE9;
+  *(uint32_t*)(dwAddress + 1) = dwNewCall;
+  
+  VirtualProtectEx(proc, (LPVOID)(dwAddress), 5, dwOldProtect, &dwNewProtect);
+}
+
 void LIB::AsmNop(DWORD dwAddress, DWORD dwNops){
   DWORD dwOldProtect, dwNewProtect;
   HANDLE proc = GetCurrentProcess();
   
   VirtualProtectEx(proc, (LPVOID)(dwAddress), dwNops, PAGE_READWRITE, &dwOldProtect);
   
-  for(int i = 0; i < dwNops; i++){
+  for(DWORD i = 0; i < dwNops; i++){
     *(uint8_t*)(dwAddress + i) = 0x90; // NOP
   }
   
@@ -1904,12 +1695,11 @@ void LIB::AsmNop(DWORD dwAddress, DWORD dwNops){
 void LIB::AsmDword(DWORD dwAddress, DWORD dwFunction){
   DWORD dwOldProtect, dwNewProtect, dwOldCall, dwNewCall;
   HANDLE proc = GetCurrentProcess();
-  VirtualProtectEx(proc, (LPVOID)(dwAddress), 4, PAGE_READWRITE, &dwOldProtect);  
+  VirtualProtectEx(proc, (LPVOID)(dwAddress), 4, PAGE_READWRITE, &dwOldProtect);
   dwNewCall = dwFunction;
-  dwOldCall = *(uint32_t*)(dwAddress);  
+  dwOldCall = *(uint32_t*)(dwAddress);
   *(uint32_t*)(dwAddress) = dwNewCall;
-  VirtualProtectEx(proc, (LPVOID)(dwAddress), 4, dwOldProtect, &dwNewProtect);  
-  //return dwOldCall;
+  VirtualProtectEx(proc, (LPVOID)(dwAddress), 4, dwOldProtect, &dwNewProtect);
 }
 
 void LIB::InitializeHook(){
@@ -1919,26 +1709,26 @@ void LIB::InitializeHook(){
   origAddress = (DWORD)((int*)IAT_CONNECT_FUNCTION_ADDRESS); //ws2_32 connect in Tibia.exe IAT
   VirtualProtect((LPVOID)origAddress, 4, PAGE_READWRITE, &dwOldProtect);
   memcpy((LPVOID)origAddress, &funcAddress, 4);
-  VirtualProtect((LPVOID)origAddress, 4, dwOldProtect, &dwNewProtect);    
+  VirtualProtect((LPVOID)origAddress, 4, dwOldProtect, &dwNewProtect);
   
   funcAddress = (DWORD)&HookedSend;
   origAddress = (DWORD)((int*)IAT_SEND_FUNCTION_ADDRESS); //ws2_32 send in Tibia.exe IAT
   VirtualProtect((LPVOID)origAddress, 4, PAGE_READWRITE, &dwOldProtect);
   memcpy((LPVOID)origAddress, &funcAddress, 4);
-  VirtualProtect((LPVOID)origAddress, 4, dwOldProtect, &dwNewProtect);     
+  VirtualProtect((LPVOID)origAddress, 4, dwOldProtect, &dwNewProtect);
   
   funcAddress = (DWORD)&HookedRecv;
   origAddress = (DWORD)((int*)IAT_RECV_FUNCTION_ADDRESS); //ws2_32 recv in Tibia.exe IAT
   VirtualProtect((LPVOID)origAddress, 4, PAGE_READWRITE, &dwOldProtect);
   memcpy((LPVOID)origAddress, &funcAddress, 4);
-  VirtualProtect((LPVOID)origAddress, 4, dwOldProtect, &dwNewProtect);   
+  VirtualProtect((LPVOID)origAddress, 4, dwOldProtect, &dwNewProtect);
   
   funcAddress = (DWORD)&HookedCreateWindowEx;
   origAddress = (DWORD)((int*)IAT_CREATEWINDOWEX_FUNCTION_ADDRESS); //USER32.CreateWindowExA
   VirtualProtect((LPVOID)origAddress, 4, PAGE_READWRITE, &dwOldProtect);
   memcpy((LPVOID)origAddress, &funcAddress, 4);
   VirtualProtect((LPVOID)origAddress, 4, dwOldProtect, &dwNewProtect);
-  
+
   // fix the wrong func address:
   HookAsmCall(DRAW_SKIN_MENU_GAME_FUNCTION_ADDRESS, DRAW_SKIN_FUNCTION_ADDRESS);
   
@@ -1955,17 +1745,14 @@ void LIB::InitializeHook(){
   // Both functions have to be checked for stack validation!
   HookAsmCall(MINIMISE_INVENTORY_REPLACEMENT_ADDRESS, (DWORD)&HookedMinInventory);
   HookAsmCall(MAXIMIZE_INVENTORY_REPLACEMENT_ADDRESS, (DWORD)&HookedMaxInventory);
-  
-  // clear the code
-  AsmNop(GUI_CLICK_EVENT_CODECAVE_CALL_ADDRESS, 6);
-  
-  // new code - check for stack validation!
-  HookAsmCall(GUI_CLICK_EVENT_CODECAVE_CALL_ADDRESS, (DWORD)&HookedOnPushEvent);  
-  
+
+  AsmDword(0x0055FC08, (DWORD)&HookedSetOutfitContextMenu);
+
   //commented
-  //HookAsmCall(ADD_CONTEXT_MENU_EX_CALL_SET_OUTFIT_FUNCTION_ADDRESS, (DWORD)&HookedAddSetOutfitContextMenu);
+  HookAsmCall(ADD_CONTEXT_MENU_EX_CALL_SET_OUTFIT_FUNCTION_ADDRESS, (DWORD)&HookedAddSetOutfitContextMenu);
   
-  HookAsmCall(0x0044B089, (DWORD)&HookedParsePacketSwitch);
+  HookAsmCall(0x0044B089, (DWORD)&HookedParsePacketSwitch, 1);
+  HookAsmJmp(0x0044B08F, 0x44A930);
   
   // new code - check for stack validation!
   HookAsmCall(0x004C8C6C, (DWORD)&HookedDrawCreatureName);
@@ -1999,7 +1786,7 @@ bool LIB::CreateDACL(SECURITY_ATTRIBUTES* pSA){
   return ConvertStringSecurityDescriptorToSecurityDescriptor(szSD, 1, (PSECURITY_DESCRIPTOR*)&(pSA->lpSecurityDescriptor), NULL);
 }
 
-bool LIB::InitSecurityAttr(){
+void LIB::InitSecurityAttr(){
   SECURITY_ATTRIBUTES sa;
   
   sa.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -2012,27 +1799,13 @@ bool LIB::InitSecurityAttr(){
 }
 
 extern "C" BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved){
-  switch(reason){
-    case DLL_PROCESS_ATTACH: {
-        g_dll.Initialize();    
-        break;
-      }
+	switch(reason){
+		case DLL_PROCESS_ATTACH: g_dll.Initialize(); break;
+		case DLL_PROCESS_DETACH: g_dll.Deinitialize(); break;
+		case DLL_THREAD_ATTACH: break;
+		case DLL_THREAD_DETACH: break;
+		default: break;
+	}
 
-    case DLL_PROCESS_DETACH: {
-        g_dll.Deinitialize();
-        break;
-      }
-
-    case DLL_THREAD_ATTACH: {
-        break;
-      }
-
-    case DLL_THREAD_DETACH: {
-        break;
-      }
-      
-    default: break;
-  }
-
-  return TRUE;
+	return TRUE;
 }

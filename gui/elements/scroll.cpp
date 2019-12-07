@@ -4,14 +4,14 @@
 void Scroll::scrollUp(Button* button, void* lParam){
 	Scroll* scroll = reinterpret_cast<Scroll*>(lParam);
 	
-	scroll->m_value = std::max(scroll->m_min, scroll->m_value - scroll->m_step);
+	scroll->m_value = std::max<int>(scroll->m_min, scroll->m_value - scroll->m_step);
 	scroll->update();
 }
 
 void Scroll::scrollDown(Button* button, void* lParam){
 	Scroll* scroll = reinterpret_cast<Scroll*>(lParam);
 	
-	scroll->m_value = std::min(scroll->m_max, scroll->m_value + scroll->m_step);
+	scroll->m_value = std::min<int>(scroll->m_max, scroll->m_value + scroll->m_step);
 	scroll->update();
 }
 
@@ -81,8 +81,8 @@ bool Scroll::onMouseEvent(MouseEvent_t event, int x, int y, bool leftButtonDown 
 				displacement = x - m_click;
 			}
 			
-			m_value = (float)((float)displacement / (float)(m_length - SCROLL_ICON_DIMENSION * 2 - m_mark)) * (float)(m_max - m_min); 			
-			m_value = std::min(m_max, std::max(m_min, m_value + m_min));
+			m_value = static_cast<int>((float)((float)displacement / (float)(m_length - SCROLL_ICON_DIMENSION * 2 - m_mark)) * (float)(m_max - m_min)); 			
+			m_value = std::min<int>(m_max, std::max<int>(m_min, m_value + m_min));
 			
 			/* Lets update cache */
 			Scroll::update();
@@ -103,7 +103,7 @@ bool Scroll::onMouseEvent(MouseEvent_t event, int x, int y, bool leftButtonDown 
 				return true;
 			} else if(isPointInRectangle(x, y, m_position.x, m_position.y + SCROLL_ICON_DIMENSION, SCROLL_ICON_DIMENSION, m_length - SCROLL_ICON_DIMENSION * 2)){ 
 				float value = (float)(y - (m_position.y + SCROLL_ICON_DIMENSION)) / (float)(m_length - SCROLL_ICON_DIMENSION * 2.0f);		
-				m_value = m_min + (m_max - m_min) * value;
+				m_value = static_cast<int>(m_min + (m_max - m_min) * value);
 				
 				/* Lets update cache */
 				Scroll::update();
@@ -118,7 +118,7 @@ bool Scroll::onMouseEvent(MouseEvent_t event, int x, int y, bool leftButtonDown 
 				return true;
 			} else if(isPointInRectangle(x, y, m_position.x + SCROLL_ICON_DIMENSION, m_position.y, m_length - SCROLL_ICON_DIMENSION * 2, SCROLL_ICON_DIMENSION)){ 
 				float value = (float)(x - (m_position.x + SCROLL_ICON_DIMENSION)) / (float)(m_length - SCROLL_ICON_DIMENSION * 2.0f);		
-				m_value = m_min + (m_max - m_min) * value;
+				m_value = static_cast<int>(m_min + (m_max - m_min) * value);
 				
 				/* Lets update cache */
 				Scroll::update();
@@ -132,8 +132,8 @@ bool Scroll::onMouseEvent(MouseEvent_t event, int x, int y, bool leftButtonDown 
 }
 
 void Scroll::update(){
-	m_mark = std::max(0.0, (m_length - SCROLL_ICON_DIMENSION * 2) * m_size);
-	m_displacement = (float)(m_length - SCROLL_ICON_DIMENSION * 2 - m_mark) * ((float)(m_value - m_min) / (float)(m_max - m_min));
+	m_mark = static_cast<int>(std::max<double>(0.0, (m_length - SCROLL_ICON_DIMENSION * 2) * m_size));
+	m_displacement = static_cast<int>((float)(m_length - SCROLL_ICON_DIMENSION * 2 - m_mark) * ((float)(m_value - m_min) / (float)(m_max - m_min)));
 }
 
 int Scroll::getPosition(){
@@ -157,7 +157,7 @@ void Scroll::setMax(int max){
 }
 
 void Scroll::setSize(double size){
-	m_size = std::min(1.0, std::max(0.0, size));
+	m_size = std::min<double>(1.0, std::max<double>(0.0, size));
 	if(m_size == 1.0){
 		m_value = m_min;
 	}
@@ -180,7 +180,7 @@ void Scroll::setLength(int lenValue){
 }
 
 void Scroll::setPosition(int position){
-	m_value = std::min(m_max, std::max(m_min, position));
+	m_value = std::min<int>(m_max, std::max<int>(m_min, position));
 	
 	/* Lets update cache */
 	Scroll::update();

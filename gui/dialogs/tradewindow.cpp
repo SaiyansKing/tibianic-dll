@@ -16,7 +16,7 @@ GUITradeWindow::GUITradeWindow() : GUIWindow("Auto Trade Messenger", 0, 0, 400, 
 	GUIParent::getControl<Label>(CONTROL_3_LOCATION)->setText(Label_t(FONT_BIG, 191, 191, 191, 0), "Please type in the message you would like to be send on trade:");
 	
 	GUIParent::getControl<CheckBox>(CONTROL_5_LOCATION)->setText("Send above message on Trade Channel each three minutes");
-	GUIParent::getControl<CheckBox>(CONTROL_5_LOCATION)->addListener(GUIElement::OnChange, boost::bind(&GUITradeWindow::invalidate, this, _1));
+	GUIParent::getControl<CheckBox>(CONTROL_5_LOCATION)->addListener(GUIElement::OnChange, std::bind(&GUITradeWindow::invalidate, this, std::placeholders::_1));
 	
 	GUIWindow::pushButton("Ok", &GUI::nullDialog, this, GUIWindow::getButtonNextX(), GUIWindow::getButtonNextY());
 	

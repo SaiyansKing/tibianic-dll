@@ -1,6 +1,6 @@
 #include "thread.h"
 
-Thread::Thread(DWORD WINAPI (*f)(void* p), LPVOID argv, bool execute /*= true*/){
+Thread::Thread(DWORD (WINAPI *f)(void* p), LPVOID argv, bool execute /*= true*/){
 	m_callback = f;
 	m_argument = argv;
 	m_executed = false;

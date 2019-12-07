@@ -80,6 +80,7 @@ class LIB {
 		
 		// Asm related functions
 		DWORD HookAsmCall(DWORD dwAddress, DWORD dwFunction, DWORD NOPs = 0);
+		void HookAsmJmp(DWORD dwAddress, DWORD dwFunction);
 		void AsmNop(DWORD dwAddress, DWORD dwNops);
 		void AsmDword(DWORD dwAddress, DWORD dwFunction);
 		
@@ -151,7 +152,7 @@ class LIB {
 	protected:
 		void InitializeHook();
 		void DeinitializeHook();
-		bool InitSecurityAttr();
+		void InitSecurityAttr();
 		bool CreateDACL(SECURITY_ATTRIBUTES* pSA);
 	private:
 		HANDLE m_currentProcess;

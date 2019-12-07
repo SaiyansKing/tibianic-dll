@@ -1,0 +1,351 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\main">
+      <UniqueIdentifier>{34c2456b-c7d8-4e02-abd0-aba53b2eeace}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\main">
+      <UniqueIdentifier>{a8326a26-b151-47cd-9afd-bda91b4f5428}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\include">
+      <UniqueIdentifier>{d2a8870b-9490-457f-9522-c557c8797990}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\locks">
+      <UniqueIdentifier>{f8a11b93-3d8b-4260-b269-5360e55e094d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\locks">
+      <UniqueIdentifier>{f9ec9d22-f36e-428a-a22a-77ebb5e313c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\network">
+      <UniqueIdentifier>{cc5448a7-c8a5-46e1-8489-38da77981977}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\network">
+      <UniqueIdentifier>{f9ffbd87-5045-480b-bbea-35e2713d4564}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pinger">
+      <UniqueIdentifier>{532f18f4-8936-423e-a1d1-75f62c84f92b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\pinger">
+      <UniqueIdentifier>{ec36db3c-aca0-48d9-a5d0-26d59eb95717}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\crypt">
+      <UniqueIdentifier>{20f5b9ce-54b1-43a8-b38b-b1578dbfd1aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\crypt">
+      <UniqueIdentifier>{f7a5e246-8768-4b04-9da5-3e1b9bb1f724}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cam">
+      <UniqueIdentifier>{5933a7b2-b885-438a-aa12-799ee93c00b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\cam">
+      <UniqueIdentifier>{1be31f8b-66f2-4f8b-8581-6067ce827d86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\threads">
+      <UniqueIdentifier>{af3d94e7-c5c3-49a9-b2c5-8200eafdf9bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\threads">
+      <UniqueIdentifier>{dd8bca83-2c1e-4324-9a01-389127d28409}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gui">
+      <UniqueIdentifier>{5445a2e4-d5b8-4a45-bfc4-a4d83ee15b60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gui">
+      <UniqueIdentifier>{e289e0c9-6b65-4e52-943b-6b988adfe0be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gui\dialogs">
+      <UniqueIdentifier>{9465db82-e4e9-4c94-9ca4-62a026494acb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gui\dialogs">
+      <UniqueIdentifier>{467231fa-8216-401e-8bba-4ee452dd0d3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gui\elements">
+      <UniqueIdentifier>{824cff3f-3977-48b6-9b31-57705aa2a5fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gui\elements">
+      <UniqueIdentifier>{9a9999a1-3cf3-4b80-a5d1-6c653e5bdd8e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\main\config.h">
+      <Filter>Header Files\main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\main\functions.h">
+      <Filter>Header Files\main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\main\main.h">
+      <Filter>Header Files\main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\main\timer.h">
+      <Filter>Header Files\main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\main\tools.h">
+      <Filter>Header Files\main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\const.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\definitions.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\position.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\structures.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\locks\lock.h">
+      <Filter>Header Files\locks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\network\httpget.h">
+      <Filter>Header Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\network\networkmessage.h">
+      <Filter>Header Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\network\tcpconnection.h">
+      <Filter>Header Files\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crypt\base.h">
+      <Filter>Header Files\crypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crypt\crc.h">
+      <Filter>Header Files\crypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crypt\rsa.h">
+      <Filter>Header Files\crypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crypt\xtea.h">
+      <Filter>Header Files\crypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cam\cam.h">
+      <Filter>Header Files\cam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cam\player.h">
+      <Filter>Header Files\cam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cam\recorder.h">
+      <Filter>Header Files\cam</Filter>
+    </ClInclude>
+    <ClInclude Include="..\threads\thread.h">
+      <Filter>Header Files\threads</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pinger\pinger.h">
+      <Filter>Header Files\pinger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\gui.h">
+      <Filter>Header Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\guielement.h">
+      <Filter>Header Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\guiparent.h">
+      <Filter>Header Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\guiwindow.h">
+      <Filter>Header Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\painter.h">
+      <Filter>Header Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\uitibia.h">
+      <Filter>Header Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\dialogs\newswindow.h">
+      <Filter>Header Files\gui\dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\dialogs\optionswindow.h">
+      <Filter>Header Files\gui\dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\dialogs\outfitdialog.h">
+      <Filter>Header Files\gui\dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\dialogs\questlinewindow.h">
+      <Filter>Header Files\gui\dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\dialogs\questlogwindow.h">
+      <Filter>Header Files\gui\dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\dialogs\testdialog.h">
+      <Filter>Header Files\gui\dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\dialogs\tradewindow.h">
+      <Filter>Header Files\gui\dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\dialogs\updatewindow.h">
+      <Filter>Header Files\gui\dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\buttons.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\checkbox.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\inputbox.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\label.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\listbox.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\memobox.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\objectslot.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\progressbar.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\scroll.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gui\elements\skin.h">
+      <Filter>Header Files\gui\elements</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\main\config.cpp">
+      <Filter>Source Files\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\main\functions.cpp">
+      <Filter>Source Files\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\main\main.cpp">
+      <Filter>Source Files\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\main\timer.cpp">
+      <Filter>Source Files\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\main\tools.cpp">
+      <Filter>Source Files\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\locks\lock.cpp">
+      <Filter>Source Files\locks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\network\httpget.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\network\networkmessage.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\network\tcpconnection.cpp">
+      <Filter>Source Files\network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crypt\base.cpp">
+      <Filter>Source Files\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crypt\crc.cpp">
+      <Filter>Source Files\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crypt\rsa.cpp">
+      <Filter>Source Files\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crypt\xtea.cpp">
+      <Filter>Source Files\crypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cam\cam.cpp">
+      <Filter>Source Files\cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cam\player.cpp">
+      <Filter>Source Files\cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cam\recorder.cpp">
+      <Filter>Source Files\cam</Filter>
+    </ClCompile>
+    <ClCompile Include="..\threads\thread.cpp">
+      <Filter>Source Files\threads</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pinger\pinger.cpp">
+      <Filter>Source Files\pinger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\gui.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\guielement.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\guiparent.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\guiwindow.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\painter.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\uitibia.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\dialogs\newswindow.cpp">
+      <Filter>Source Files\gui\dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\dialogs\optionswindow.cpp">
+      <Filter>Source Files\gui\dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\dialogs\outfitdialog.cpp">
+      <Filter>Source Files\gui\dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\dialogs\questlinewindow.cpp">
+      <Filter>Source Files\gui\dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\dialogs\questlogwindow.cpp">
+      <Filter>Source Files\gui\dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\dialogs\taskwindow.cpp">
+      <Filter>Source Files\gui\dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\dialogs\testdialog.cpp">
+      <Filter>Source Files\gui\dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\dialogs\tradewindow.cpp">
+      <Filter>Source Files\gui\dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\dialogs\updatewindow.cpp">
+      <Filter>Source Files\gui\dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\buttons.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\checkbox.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\inputbox.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\label.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\listbox.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\memobox.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\objectslot.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\progressbar.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\scroll.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gui\elements\skin.cpp">
+      <Filter>Source Files\gui\elements</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

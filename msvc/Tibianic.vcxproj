@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\cam\cam.h" />
+    <ClInclude Include="..\cam\player.h" />
+    <ClInclude Include="..\cam\recorder.h" />
+    <ClInclude Include="..\crypt\base.h" />
+    <ClInclude Include="..\crypt\crc.h" />
+    <ClInclude Include="..\crypt\rsa.h" />
+    <ClInclude Include="..\crypt\xtea.h" />
+    <ClInclude Include="..\gui\dialogs\newswindow.h" />
+    <ClInclude Include="..\gui\dialogs\optionswindow.h" />
+    <ClInclude Include="..\gui\dialogs\outfitdialog.h" />
+    <ClInclude Include="..\gui\dialogs\questlinewindow.h" />
+    <ClInclude Include="..\gui\dialogs\questlogwindow.h" />
+    <ClInclude Include="..\gui\dialogs\testdialog.h" />
+    <ClInclude Include="..\gui\dialogs\tradewindow.h" />
+    <ClInclude Include="..\gui\dialogs\updatewindow.h" />
+    <ClInclude Include="..\gui\elements\buttons.h" />
+    <ClInclude Include="..\gui\elements\checkbox.h" />
+    <ClInclude Include="..\gui\elements\inputbox.h" />
+    <ClInclude Include="..\gui\elements\label.h" />
+    <ClInclude Include="..\gui\elements\listbox.h" />
+    <ClInclude Include="..\gui\elements\memobox.h" />
+    <ClInclude Include="..\gui\elements\objectslot.h" />
+    <ClInclude Include="..\gui\elements\progressbar.h" />
+    <ClInclude Include="..\gui\elements\scroll.h" />
+    <ClInclude Include="..\gui\elements\skin.h" />
+    <ClInclude Include="..\gui\gui.h" />
+    <ClInclude Include="..\gui\guielement.h" />
+    <ClInclude Include="..\gui\guiparent.h" />
+    <ClInclude Include="..\gui\guiwindow.h" />
+    <ClInclude Include="..\gui\painter.h" />
+    <ClInclude Include="..\gui\uitibia.h" />
+    <ClInclude Include="..\include\const.h" />
+    <ClInclude Include="..\include\definitions.h" />
+    <ClInclude Include="..\include\position.h" />
+    <ClInclude Include="..\include\structures.h" />
+    <ClInclude Include="..\locks\lock.h" />
+    <ClInclude Include="..\main\config.h" />
+    <ClInclude Include="..\main\functions.h" />
+    <ClInclude Include="..\main\main.h" />
+    <ClInclude Include="..\main\timer.h" />
+    <ClInclude Include="..\main\tools.h" />
+    <ClInclude Include="..\network\httpget.h" />
+    <ClInclude Include="..\network\networkmessage.h" />
+    <ClInclude Include="..\network\tcpconnection.h" />
+    <ClInclude Include="..\pinger\pinger.h" />
+    <ClInclude Include="..\threads\thread.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\cam\cam.cpp" />
+    <ClCompile Include="..\cam\player.cpp" />
+    <ClCompile Include="..\cam\recorder.cpp" />
+    <ClCompile Include="..\crypt\base.cpp" />
+    <ClCompile Include="..\crypt\crc.cpp" />
+    <ClCompile Include="..\crypt\rsa.cpp" />
+    <ClCompile Include="..\crypt\xtea.cpp" />
+    <ClCompile Include="..\gui\dialogs\newswindow.cpp" />
+    <ClCompile Include="..\gui\dialogs\optionswindow.cpp" />
+    <ClCompile Include="..\gui\dialogs\outfitdialog.cpp" />
+    <ClCompile Include="..\gui\dialogs\questlinewindow.cpp" />
+    <ClCompile Include="..\gui\dialogs\questlogwindow.cpp" />
+    <ClCompile Include="..\gui\dialogs\taskwindow.cpp" />
+    <ClCompile Include="..\gui\dialogs\testdialog.cpp" />
+    <ClCompile Include="..\gui\dialogs\tradewindow.cpp" />
+    <ClCompile Include="..\gui\dialogs\updatewindow.cpp" />
+    <ClCompile Include="..\gui\elements\buttons.cpp" />
+    <ClCompile Include="..\gui\elements\checkbox.cpp" />
+    <ClCompile Include="..\gui\elements\inputbox.cpp" />
+    <ClCompile Include="..\gui\elements\label.cpp" />
+    <ClCompile Include="..\gui\elements\listbox.cpp" />
+    <ClCompile Include="..\gui\elements\memobox.cpp" />
+    <ClCompile Include="..\gui\elements\objectslot.cpp" />
+    <ClCompile Include="..\gui\elements\progressbar.cpp" />
+    <ClCompile Include="..\gui\elements\scroll.cpp" />
+    <ClCompile Include="..\gui\elements\skin.cpp" />
+    <ClCompile Include="..\gui\gui.cpp" />
+    <ClCompile Include="..\gui\guielement.cpp" />
+    <ClCompile Include="..\gui\guiparent.cpp" />
+    <ClCompile Include="..\gui\guiwindow.cpp" />
+    <ClCompile Include="..\gui\painter.cpp" />
+    <ClCompile Include="..\gui\uitibia.cpp" />
+    <ClCompile Include="..\locks\lock.cpp" />
+    <ClCompile Include="..\main\config.cpp" />
+    <ClCompile Include="..\main\functions.cpp" />
+    <ClCompile Include="..\main\main.cpp" />
+    <ClCompile Include="..\main\timer.cpp" />
+    <ClCompile Include="..\main\tools.cpp" />
+    <ClCompile Include="..\network\httpget.cpp" />
+    <ClCompile Include="..\network\networkmessage.cpp" />
+    <ClCompile Include="..\network\tcpconnection.cpp" />
+    <ClCompile Include="..\pinger\pinger.cpp" />
+    <ClCompile Include="..\threads\thread.cpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{838CD916-9043-4731-8CDD-D468F55AC056}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Tibianic</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;TIBIANIC_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>..\threads;..\pinger;..\network;..\main;..\locks;..\include;..\gui\elements;..\gui\dialogs;..\gui;..\gmp;..\crypt;..\cam;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\gmp;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mpir.lib;ws2_32.lib;winmm.lib;wininet.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

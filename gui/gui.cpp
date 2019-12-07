@@ -121,8 +121,8 @@ bool GUI::onMouseEvent(MouseEvent_t event, int x, int y, bool leftButtonDown /*=
 	if(m_drag){
 		switch(event){
 			case EVENT_MOVEMENT: {
-				m_drag->m_position.x = std::max(0, std::min(g_dll.m_screenWidth - m_drag->m_width, x - m_click.x));
-				m_drag->m_position.y = std::max(0, std::min(g_dll.m_screenHeight - m_drag->m_height, y - m_click.y));		
+				m_drag->m_position.x = std::max<int32_t>(0, std::min<int32_t>(g_dll.m_screenWidth - m_drag->m_width, x - m_click.x));
+				m_drag->m_position.y = std::max<int32_t>(0, std::min<int32_t>(g_dll.m_screenHeight - m_drag->m_height, y - m_click.y));
 				return true;
 			}
 			

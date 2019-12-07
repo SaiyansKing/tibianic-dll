@@ -6,8 +6,7 @@
 #include <vector>
 #include <map>
 
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "functions.h"
 #include "position.h"
@@ -29,7 +28,7 @@ class GUIElement {
 			OnChange
 		};
 		
-		typedef boost::function<void (GUIElement* caller)> Listener;
+		typedef std::function<void (GUIElement* caller)> Listener;
 	
 	/* Class functions */
 	public:

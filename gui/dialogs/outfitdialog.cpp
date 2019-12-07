@@ -17,7 +17,7 @@
 void GUIOutfitDialog::chooseNone(Button* button, void* param){
 	GUIOutfitDialog* dialog = reinterpret_cast<GUIOutfitDialog*>(param);
 	
-	for(int i = 1; i <= dialog->getControl<Buttons>(CONTROL_1_LOCATION)->getAmount(); i++){
+	for(uint32_t i = 1; i <= dialog->getControl<Buttons>(CONTROL_1_LOCATION)->getAmount(); i++){
 		Button* control = dialog->getControl<Buttons>(CONTROL_1_LOCATION)->getButton(i);
 		if(button != control){
 			control->deactivate();
@@ -96,7 +96,7 @@ void GUIOutfitDialog::chooseNext(Button* button, void* param){
 	GUIOutfitDialog* dialog = reinterpret_cast<GUIOutfitDialog*>(param);
 	
 	if(!dialog->m_outfits.empty()){
-		if(dialog->m_outfitId + 1 < dialog->m_outfits.size()){
+		if(dialog->m_outfitId + 1 < static_cast<int>(dialog->m_outfits.size())){
 			dialog->m_outfitId++;
 		} else {
 			dialog->m_outfitId = 0;
@@ -174,7 +174,7 @@ void GUIOutfitDialog::setOutfits(std::vector< std::pair<uint32_t, std::string> >
 }
 
 void GUIOutfitDialog::setOutfit(Outfit_t outfit){
-	for(int i = 0; i < m_outfits.size(); ++i){
+	for(int i = 0; i < static_cast<int>(m_outfits.size()); ++i){
 		if(m_outfits[i].first == outfit.type){
 			/* Set current outfit */
 			m_outfit = outfit;

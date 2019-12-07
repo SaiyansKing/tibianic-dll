@@ -67,8 +67,8 @@ void GUIWindow::onResolution(){
 	/* TODO - only dialog should be centered */
 	
 	/* Lets update position to the center since resolution has changed */
-	position.x = std::max((int32_t)0, (int32_t)(g_dll.m_screenWidth / 2 - GUIElement::getWidth() / 2));
-	position.y = std::max((int32_t)0, (int32_t)(g_dll.m_screenHeight / 2 - GUIElement::getHeight() / 2));
+	position.x = std::max<int32_t>(0, (g_dll.m_screenWidth / 2 - GUIElement::getWidth() / 2));
+	position.y = std::max<int32_t>(0, (g_dll.m_screenHeight / 2 - GUIElement::getHeight() / 2));
 	
 	/* Set the position of the element */
 	GUIElement::setPosition(position.x, position.y);
