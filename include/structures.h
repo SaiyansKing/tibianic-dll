@@ -26,6 +26,7 @@ struct Outfit_t {
 	OutfitMasks_t masks;
 };
 
+#pragma pack(1)
 struct Creature_t {
 	uint32_t id;
 	char name[32];
@@ -41,7 +42,7 @@ struct Creature_t {
 	uint32_t u6;
 	
 	uint32_t walking;
-	uint32_t dir;	
+	uint32_t dir;
 	
 	uint32_t u8;
 	uint32_t u9;
@@ -67,6 +68,7 @@ struct Creature_t {
 	
 	uint32_t u12;
 };
+#pragma pack()
 
 struct Object_t {
 	uint32_t objectId;

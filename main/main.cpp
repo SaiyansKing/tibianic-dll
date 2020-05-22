@@ -624,7 +624,7 @@ void __cdecl HookedTimer(){
 /* This function is a this call, ecx contains GUIItem */
 uint32_t __stdcall HookedGetIconSkin(int iconNumber){
   Creature_t* player = Tibia::GetCreatureEntry(Tibia::GetPlayerInfo(PLAYER_INFO_ID));
-  
+
   uint32_t currentIcon = 0;
   if(player->skull != SKULL_NONE){
     if(iconNumber == 0){
